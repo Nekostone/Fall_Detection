@@ -6,28 +6,42 @@ from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import imageio
 
-os.chdir(r"C:\ti\mmwave_studio_02_00_00_02\mmWaveStudio\PostProc")
+os.chdir(r"C:\Users\XC199\Desktop\Crapstone\March_27_Data")
+
+x = loadmat('20200327_JD_2m_Backwards.mat') # matrix is loaded as a dict
+
+
+RadarState = x['RadarState']
+ProfileConfig = RadarState[0][0][2]
+FrameConfig   = RadarState[0][0][34]
 
 print("Reading adc_data.bin")
 
-with open('adc_data.bin', mode='rb') as file:
+with open('20200327_JD_2m_Backwards.bin', mode='rb') as file:
     fileContent = file.read()
 
+
 # Settings
-numSamplesPerChirp = 256
-numChirpLoops      = 128
-numChannels        = 4
-numFrames          = 8
+numSamplesPerChirp = ProfileConfig[0][0][9][0][0]
+numChirpLoops      = FrameConfig[0][0][0][0][0][0][0][0][3][0][0]
+numChirpConfs      = FrameConfig[0][0][0][0][0][0][0][0][2][0][0]
+numChirpLoops      = numChirpLoops*numChirpConfs
+numFrames          = FrameConfig[0][0][3][0][0]
+
+numTxAnt           = 1
+numChannels        = numTxAnt*4
+
 byteLength         = 2
 chirpDataLen       = numSamplesPerChirp*2*byteLength*numChirpLoops*numChannels
 startFreq          = 77*(10**9)
 
 # Constant
-c        = 3*(10**8)
-slope    = (64.985*10**12)
-rampTime = 60*10**-6
-bandwidth = slope*rampTime
-framePeriod = 40*(10**-3)
+c           = 3*(10**8)
+slope       = ProfileConfig[0][0][7][0][0]
+rampTime    = ProfileConfig[0][0][4][0][0]
+bw          = slope*rampTime
+startFreq   = ProfileConfig[0][0][1][0][0]
+framePeriod = FrameConfig[0][0][1][0][0]
 
 # Axis Calculation
 rangeRes = c/(2*bandwidth)
