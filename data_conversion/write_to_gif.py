@@ -5,23 +5,37 @@ from scipy.fftpack import fft, fftshift
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import imageio
+import scipy.io as sio
+from matplotlib import animation
+import io
+import copy
+import PIL.Image as Image
+import argparse
 
-os.chdir(r"C:\Users\XC199\Desktop\Crapstone\March_27_Data")
 
-x = loadmat('20200327_JD_2m_Backwards.mat') # matrix is loaded as a dict
+#Construct arg parser
+ap = argparse.ArgumentParser()
+ap.add_argument("-folder", "--folderpath",required=True,help="folder path")
+ap.add_argument("-file","--filename", required=True,help="file name (e.g. 20200320_ttt_4m_sideways)")
+args = vars(ap.parse_args())
+folderpath = str(args['folderpath'])
+os.chdir(folderpath.encode('unicode_escape'))
+filename = str(args['filename'])
+
+x = sio.loadmat(filename+".mat") # matrix is loaded as a dict
 
 
 RadarState = x['RadarState']
 ProfileConfig = RadarState[0][0][2]
-FrameConfig   = RadarState[0][0][34]
+FrameConfig   = RadarState[0][0][-1]
 
-print("Reading adc_data.bin")
+print("Reading bin file")
 
-with open('20200327_JD_2m_Backwards.bin', mode='rb') as file:
+with open(filename+".bin", mode='rb') as file:
     fileContent = file.read()
 
 
-# Settings
+# Settings taken from .mat file
 numSamplesPerChirp = ProfileConfig[0][0][9][0][0]
 numChirpLoops      = FrameConfig[0][0][0][0][0][0][0][0][3][0][0]
 numChirpConfs      = FrameConfig[0][0][0][0][0][0][0][0][2][0][0]
@@ -44,7 +58,7 @@ startFreq   = ProfileConfig[0][0][1][0][0]
 framePeriod = FrameConfig[0][0][1][0][0]
 
 # Axis Calculation
-rangeRes = c/(2*bandwidth)
+rangeRes = c/(2*bw)
 maxRange = rangeRes*numSamplesPerChirp/2
 velRes = (c/startFreq)/(2*framePeriod)
 maxVel = (numChirpLoops/2)*velRes
@@ -93,19 +107,11 @@ while (x < len(fileContent)//chirpDataLen):
     print("Performing range-doppler conversion for each rx")
     for i in range(4):
         channel_dict["rx" + str(i)] = np.asarray([complex(s, y) for s, y in zip(list_dict["rx" + str(i) + "_real"], list_dict["rx" + str(i) + "_comp"])])
-        # print("List Len: " + str(len(channel_dict["rx" + str(i)])))
-        # with open('channel' + str(i) + '.csv', 'a') as csvFile:
-        #     writer = csv.writer(csvFile)
-        #     writer.writerow(channel_dict["rx" + str(i)])
-        # csvFile.close()
         channel_dict["rx" + str(i)] = np.reshape(channel_dict["rx" + str(i)], (int(len(channel_dict["rx" + str(i)])/numSamplesPerChirp), numSamplesPerChirp))
-        # if i == 1:
-        #     print(channel_dict["rx" + str(i)])
         print(np.shape(channel_dict["rx" + str(i)]))
         
         # Range FFT
         for index,val in enumerate(channel_dict["rx" + str(i)]):
-            # print(np.shape(val))
             channel_dict["rx" + str(i)][index] = np.asarray(fft(val))
             output_dict["rx" + str(i)].append(channel_dict["rx" + str(i)][index][0:128]) # take the values at positive frequencies
         output_dict["rx" + str(i)] = np.transpose(output_dict["rx" + str(i)])
@@ -121,25 +127,26 @@ while (x < len(fileContent)//chirpDataLen):
     maxSNR = maxSNR
 
     # plotting
-    fig, ax = plt.subplots(figsize=(10,5))
-
-    ax.set(xlabel='Range', ylabel='Doppler', title='Range-Doppler plot')
-
+    fig = plt.figure()
+    plt.xlabel('Range',fontsize=20)
+    plt.ylabel("Doppler",fontsize=20)
+    plt.title('Range-Doppler plot',fontsize=20)
     range_doppler = sb.heatmap(output_dict["rx1"], cmap='coolwarm', vmin = minSNR, vmax = maxSNR)
-
-    ax.set_xticks(np.arange(0, maxRange, rangeRes))
-    ax.set_yticks(np.arange(-maxVel, maxVel, velRes))
-
+    range_doppler.swap_axes()
     fig.canvas.draw()
-
-    image = np.frombuffer(fig.canvas.tostring_rgb(), dtype='uint8')
-    image  = image.reshape(fig.canvas.get_width_height()[::-1] + (3,))
-
-    giflist.append(image)
+    #convert to PIL image object and then append the created Image into giflist
+    #Set dpi to desired level(Higher means bigger and more costly in terms of memory)
+    buf = io.BytesIO()
+    fig.savefig(buf,format="png",dpi=50)
+    buf.seek(0)
+    pil_img = copy.deepcopy(Image.open(buf))
+    giflist.append(pil_img)
+    buf.close()
 
     x += 1
+counter = 0
 
-kwargs_write = {'fps':15.0, 'quantizer':'nq'}
 
-# giffing
-imageio.mimsave('./rangedoppler1.gif', giflist, fps=15)
+
+#gif file created. gif file will be saved with same name as file
+giflist[0].save('./'+ args['filename']+'.gif', format="GIF",append_images=giflist[1:],save_all=True,duration=50, loop=0)
