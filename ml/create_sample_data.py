@@ -6,7 +6,7 @@ import argparse
 def thresholding_data(output_dir, sample_number):
     data = None
     if sample_number == 1:
-        data = np.array([
+        data = np.array([[
             [1,2,3,4,3,2,1],
             [2,3,4,5,4,3,2],
             [3,4,5,6,5,4,3],
@@ -14,7 +14,7 @@ def thresholding_data(output_dir, sample_number):
             [3,4,5,6,5,4,3],
             [2,3,4,5,4,3,2],
             [1,2,3,4,3,2,1]
-        ])
+        ]])
     else:
         print("ERROR - Sample data not available for sample_number {0}".format(sample_number))
         
@@ -23,7 +23,7 @@ def thresholding_data(output_dir, sample_number):
 def identify_features(output_dir, sample_number):
     data = None
     if sample_number == 1:
-        data = np.array([
+        data = np.array([[
             [0,0,0,0,0,0,0,0,0,0],
             [0,9,0,0,0,0,0,0,0,0],
             [0,0,0,0,0,0,0,0,0,0],
@@ -34,7 +34,7 @@ def identify_features(output_dir, sample_number):
             [0,0,0,0,0,0,0,0,0,0],
             [0,0,0,0,0,0,0,3,0,0],
             [0,0,0,0,0,0,0,0,0,0],
-        ])
+        ]])
     else:
         print("ERROR - Sample data not available for sample_number {0}".format(sample_number))
         
