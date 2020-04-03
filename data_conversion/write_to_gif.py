@@ -74,14 +74,14 @@ while (x < len(fileContent)//chirpDataLen):
     file = []
 
     # split byte inputs into 2-byte packets
-    print("Byte-splitting...")
+    # print("Byte-splitting...")
     for i in range(len(filehold)//2):
         file.append(filehold[i*2:(i+1)*2])
-    print("Done")
+    # print("Done")
 
-    print("Converting...")
+    # print("Converting...")
     file = (struct.unpack('h', s) for s in file)
-    print("Done")
+    # print("Done")
 
     # Convert to int
     file = [int(s[0]) for s in file]
@@ -108,7 +108,7 @@ while (x < len(fileContent)//chirpDataLen):
     for i in range(4):
         channel_dict["rx" + str(i)] = np.asarray([complex(s, y) for s, y in zip(list_dict["rx" + str(i) + "_real"], list_dict["rx" + str(i) + "_comp"])])
         channel_dict["rx" + str(i)] = np.reshape(channel_dict["rx" + str(i)], (int(len(channel_dict["rx" + str(i)])/numSamplesPerChirp), numSamplesPerChirp))
-        print(np.shape(channel_dict["rx" + str(i)]))
+        # print(np.shape(channel_dict["rx" + str(i)]))
         
         # Range FFT
         for index,val in enumerate(channel_dict["rx" + str(i)]):
@@ -120,8 +120,8 @@ while (x < len(fileContent)//chirpDataLen):
         for index,val in enumerate(output_dict["rx" + str(i)]):
             output_dict["rx" + str(i)][index] = fftshift(fft(val))
         output_dict["rx" + str(i)] = np.log10(np.abs(np.transpose(output_dict["rx" + str(i)])))
-        print("Channel " + str(i) + " complete")
-    print("Done")
+    #     print("Channel " + str(i) + " complete")
+    # print("Done")
 
     minSNR = 0
     maxSNR = maxSNR
@@ -131,8 +131,9 @@ while (x < len(fileContent)//chirpDataLen):
     plt.xlabel('Range',fontsize=20)
     plt.ylabel("Doppler",fontsize=20)
     plt.title('Range-Doppler plot',fontsize=20)
+    print(output_dict["rx1"])
     range_doppler = sb.heatmap(output_dict["rx1"], cmap='coolwarm', vmin = minSNR, vmax = maxSNR)
-    range_doppler.swap_axes()
+    #range_doppler.swap_axes()
     fig.canvas.draw()
     #convert to PIL image object and then append the created Image into giflist
     #Set dpi to desired level(Higher means bigger and more costly in terms of memory)
@@ -144,7 +145,7 @@ while (x < len(fileContent)//chirpDataLen):
     buf.close()
 
     x += 1
-counter = 0
+    print(x)
 
 
 
