@@ -122,7 +122,7 @@ while (x < len(fileContent)//chirpDataLen):
         output_dict["rx" + str(i)] = np.log10(np.abs(np.transpose(output_dict["rx" + str(i)])))
     #     print("Channel " + str(i) + " complete")
     # print("Done")
-
+b
     minSNR = 0
     maxSNR = maxSNR
 
@@ -149,5 +149,13 @@ while (x < len(fileContent)//chirpDataLen):
 
 
 
-#gif file created. gif file will be saved with same name as file
+gif file created. gif file will be saved with same name as file
 giflist[0].save('./'+ args['filename']+'.gif', format="GIF",append_images=giflist[1:],save_all=True,duration=50, loop=0)
+
+plotting
+
+
+kwargs_write = {'fps':15.0, 'quantizer':'nq'}
+
+# giffing
+imageio.mimsave('./rangedoppler1.gif', giflist, fps=15)

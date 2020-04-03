@@ -15,7 +15,7 @@ input_not_fall_dir = "C:\\Users\\user\\Documents\\Capstone\\SourceCode\\Fall_Dat
 output_fall_dir = "C:\\Users\\user\\Documents\\Capstone\\SourceCode\\Fall_Data\\radar_sensor_data\\processed\\fall"
 output_not_fall_dir = "C:\\Users\\user\\Documents\\Capstone\\SourceCode\\Fall_Data\\radar_sensor_data\\processed\\not_fall"
 
-number_of_parallel_processes = 10
+number_of_parallel_processes = 4
 
 def processfiles(process_id, list_of_fall_files, input_fall_folder_dir, output_fall_folder_dir, list_of_notfall_files, input_notfall_folder_dir, output_notfall_folder_dir):
     import subprocess

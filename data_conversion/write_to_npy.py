@@ -132,23 +132,23 @@ def main(input_folder, input_filename, output_folder):
 
         lengthx = output_dict["rx1"].shape[0]
         lengthy = output_dict["rx1"].shape[1]
-        fig = plt.figure()
-        #Generate image for one plot 
-        plt.xlabel('Range',fontsize=20)
-        plt.ylabel("Doppler",fontsize=20)
-        plt.title('Range-Doppler plot',fontsize=20)
-        minSNR = 0
-        range_doppler = sb.heatmap(output_dict["rx1"], cmap='coolwarm', vmin = minSNR, vmax = maxSNR)
-        fig.canvas.draw()
-        #convert to PIL image object and then append the created Image into giflist
-        #Set dpi to desired level(Higher means bigger and more costly in terms of memory)
-        buf = io.BytesIO()
-        fig.savefig(buf,format="png",dpi=50)
-        buf.seek(0)
-        pil_img = copy.deepcopy(Image.open(buf))
-        #add image to giflist which will contain the entire set of images
-        giflist.append(pil_img)
-        buf.close()
+        # fig = plt.figure()
+        # #Generate image for one plot 
+        # plt.xlabel('Range',fontsize=20)
+        # plt.ylabel("Doppler",fontsize=20)
+        # plt.title('Range-Doppler plot',fontsize=20)
+        # minSNR = 0
+        # range_doppler = sb.heatmap(output_dict["rx1"], cmap='coolwarm', vmin = minSNR, vmax = maxSNR)
+        # fig.canvas.draw()
+        # #convert to PIL image object and then append the created Image into giflist
+        # #Set dpi to desired level(Higher means bigger and more costly in terms of memory)
+        # buf = io.BytesIO()
+        # fig.savefig(buf,format="png",dpi=50)
+        # buf.seek(0)
+        # pil_img = copy.deepcopy(Image.open(buf))
+        # #add image to giflist which will contain the entire set of images
+        # giflist.append(pil_img)
+        # buf.close()
         if state_isfirst:
             state_isfirst = False
             output_dict["rx1"].resize((1, lengthx, lengthy))
@@ -162,7 +162,7 @@ def main(input_folder, input_filename, output_folder):
         x += 1
     os.chdir(output_folder.encode('unicode_escape'))
     np.save(input_filename, data)
-    giflist[0].save(input_filename+'.gif', format="GIF",append_images=giflist[1:],save_all=True,duration=50, loop=0)
+    #giflist[0].save(input_filename+'.gif', format="GIF",append_images=giflist[1:],save_all=True,duration=50, loop=0)
 
 
 if __name__ == '__main__':
