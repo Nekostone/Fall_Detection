@@ -17,14 +17,6 @@ from multiprocessing import Process
 # output_fall_dir = "/home/xubuntu/Desktop/sensor_data/processed/fall/"
 # output_not_fall_dir = "/home/xubuntu/Desktop/sensor_data/processed/not_fall/"
 
-##Windows dir
-program_abs_dir = "C:\\Users\\user\\Documents\\Capstone\\SourceCode\\Fall_Detection\\data_conversion\\write_to_npy.py"
-input_fall_dir = "C:\\Users\\user\\Documents\\Capstone\\SourceCode\\Fall_Data\\radar_sensor_data\\fall"
-input_not_fall_dir = "C:\\Users\\user\\Documents\\Capstone\\SourceCode\\Fall_Data\\radar_sensor_data\\not_fall"
-output_fall_dir = "C:\\Users\\user\\Documents\\Capstone\\SourceCode\\Fall_Data\\radar_sensor_data\\processed\\fall"
-output_not_fall_dir = "C:\\Users\\user\\Documents\\Capstone\\SourceCode\\Fall_Data\\radar_sensor_data\\processed\\not_fall"
-
-number_of_parallel_processes = 4
 
 def write_to_npy(process_id, list_of_fall_files, input_fall_folder_dir, output_fall_folder_dir, list_of_notfall_files, input_notfall_folder_dir, output_notfall_folder_dir):
     import subprocess
@@ -61,11 +53,11 @@ def npy_to_gif(process_id, list_of_fall_files, input_fall_folder_dir, output_fal
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Process data files (using existing functions in this folder) across multiple processes')
     parser.add_argument('--mode', required=True, type = int, dest='mode', help="Set the mode of processing of data files")
-    parser.add_argument('--program_abs_dir', required=True, type = str, dest='program_abs_dir', help="")
-    parser.add_argument('--input_fall_dir', required=True, type = str, dest='input_fall_dir', help="")
-    parser.add_argument('--input_not_fall_dir', required=True, type = str, dest='input_not_fall_dir', help="")
-    parser.add_argument('--output_fall_dir', type = str, dest='output_fall_dir', help="")
-    parser.add_argument('--output_not_fall_dir', type = str, dest='output_not_fall_dir', help="")
+    parser.add_argument('--program_abs_dir', required=True, type = str, dest='program_abs_dir', help="Directory of thresholding.py")
+    parser.add_argument('--input_fall_dir', required=True, type = str, dest='input_fall_dir', help="Directory of input fall data")
+    parser.add_argument('--input_not_fall_dir', required=True, type = str, dest='input_not_fall_dir', help="Directory of input nonfall data")
+    parser.add_argument('--output_fall_dir', type = str, dest='output_fall_dir', help="Directory of output from fall data")
+    parser.add_argument('--output_not_fall_dir', type = str, dest='output_not_fall_dir', help="Directory of output from nonfall data")
     parser.add_argument('--number_of_parallel_processes', required=True, type = int, dest='number_of_parallel_processes', help="Number of parallel processes to use (in doubt just put 1)")
     args = parser.parse_args()
 

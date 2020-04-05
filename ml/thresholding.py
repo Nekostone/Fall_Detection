@@ -11,7 +11,7 @@ def main(input_dir, output_dir, width_of_ignored_pixels, width_of_rim_for_compar
     output_cube = None
     first_iteration_state = True
 
-    print("input_cube.shape: {0}".format(input_cube.shape))
+    # print("input_cube.shape: {0}".format(input_cube.shape))
     for i in range(input_cube.shape[0]):
         input_data = input_cube[i]
 
@@ -57,7 +57,7 @@ def main(input_dir, output_dir, width_of_ignored_pixels, width_of_rim_for_compar
         else:
             output_cube = np.append(output_cube, output_data, axis=0)
 
-    print("output_cube.shape: {0}".format(output_cube.shape))
+    # print("output_cube.shape: {0}".format(output_cube.shape))
     np.save(output_dir, output_cube)
 
 
