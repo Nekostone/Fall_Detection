@@ -64,10 +64,9 @@ def identify_features(output_dir, sample_number):
         
     np.save(output_dir, data)
 
-def svm(output_dir, sample_number):
+def retrieve_coordinates(output_dir, sample_number):
     data = None
     if sample_number == 1:
-        # for testing the coordinates retrieval part of svm
         data = np.array([
             [
                 [1,0,0],
@@ -115,14 +114,14 @@ if __name__ == '__main__':
                 thresholding_data(output_dir, 2)
 
         elif int(args.mode) == 3:
-            print("create_sample_data - Generating svm test data...")
+            print("create_sample_data - Generating retrieve_coordinates test data...")
             if args.output_filename and args.sample_number:
-                svm(args.output_filename, int(args.sample_number))
+                retrieve_coordinates(args.output_filename, int(args.sample_number))
             else:
                 output_dir = "/home/xubuntu/Desktop/capstone/ml/thresholded(comparisonrim_ignoredpixels)/test/1_1/fall/sample1.npy"
-                svm(output_dir, 1)
+                retrieve_coordinates(output_dir, 1)
                 output_dir = "/home/xubuntu/Desktop/capstone/ml/thresholded(comparisonrim_ignoredpixels)/test/1_1/not_fall/sample2.npy"
-                svm(output_dir, 1)
+                retrieve_coordinates(output_dir, 1)
         else:
             print("ERROR - Mode number {0} not available".format(args.mode))
     else:
