@@ -19,7 +19,7 @@ def main(input_dir, output_dir, width_of_ignored_pixels, width_of_rim_for_compar
         output_data = np.zeros((input_data.shape[0], input_data.shape[1]))
 
         # applying padding
-        input_data = np.pad(input_data, width_of_ignored_pixels+width_of_rim_for_comparison, 'constant', constant_values=0)
+        input_data = np.pad(input_data, width_of_ignored_pixels+width_of_rim_for_comparison, 'minimum')
         # print("input_data (after padding): \n", input_data)
 
         length_of_kernel = width_of_ignored_pixels*2 + width_of_rim_for_comparison*2 + 1

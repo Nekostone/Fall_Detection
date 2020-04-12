@@ -248,9 +248,6 @@ if __name__ == "__main__":
 
         all_data_in_category = np.array(all_data_in_category)
         np.save(file_to_write, all_data_in_category)
-
-                
-
-                
+ 
     # cleanup
     subprocess.run("rm -rf {0}".format(temp_folder_dir), shell=True)

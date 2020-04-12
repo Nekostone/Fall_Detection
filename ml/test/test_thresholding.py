@@ -50,6 +50,7 @@ class PositiveTest(unittest.TestCase):
         ], dtype=np.float64)
 
         comparison_result = (result == to_compare).all()
+        print("result: {0}".format(result))
         self.assertTrue(comparison_result)
     
     def tearDown(self):
