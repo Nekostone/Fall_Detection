@@ -23,13 +23,6 @@ import copy
 import csv
 
 
-falldata_dir = ""
-nonfalldata_dir = ""
-current_dir = os.path.dirname(os.path.realpath(__file__))
-number_of_cores_available = 6
-
-
-
 # generate coordinates numpy array
 def retrieve_coordinates(process_id, global_dict, list_of_fall_files, input_fall_folder_dir, list_of_notfall_files, input_notfall_folder_dir, output_dir):
     """
@@ -157,97 +150,106 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='')
     parser.add_argument('--input_fall_dir', required=True, type = str, dest='input_fall_dir', help="Directory of input fall data")
     parser.add_argument('--input_notfall_dir', required=True, type = str, dest='input_notfall_dir', help="Directory of input nonfall data")
-    parser.add_argument('--output_fall_dir', required=True, type = str, dest='output_fall_dir', help="Directory of json outputfile that stores final processed coordinates of fall data")
-    parser.add_argument('--output_notfall_dir', required=True, type = str, dest='output_notfall_dir', help="Directory of json outputfile that stores final processed coordinates of not fall data")
+    parser.add_argument('--output_fall_dir', required=True, type = str, dest='output_fall_dir', help="Directory of npy outputfile that stores final processed coordinates of fall data")
+    parser.add_argument('--output_notfall_dir', required=True, type = str, dest='output_notfall_dir', help="Directory of npy outputfile that stores final processed coordinates of not fall data")
     parser.add_argument('--number_of_parallel_processes', required=True, type = int, dest='number_of_parallel_processes', help="Number of parallel processes to use (in doubt just put 1)")
     args = parser.parse_args()
 
-    # create temp folder to store metadata (return error if folder alr exist)
+    current_dir = os.path.dirname(os.path.realpath(__file__))
+
+    # START - single threaded implementation
     temp_folder_dir = os.path.join(current_dir, "temp")
     if os.path.exists(temp_folder_dir):
         print("ERROR - Temp folder already exist. Please delete before running script")
         exit(0)
     os.mkdir(temp_folder_dir)
 
-    # split files evenly to be processed by each process
     data = []
     for i in [args.input_fall_dir, args.input_notfall_dir]:
-        list_of_files = os.listdir(i)
-        d = len(list_of_files)//args.number_of_parallel_processes
-        sublist_of_files = []
+        data.append(os.listdir(i))
+    global_dict = {}
+    output_dir = os.path.join(temp_folder_dir, "0_coordinates_dict.json"
+    retrieve_coordinates(0, global_dict, data[0], args.input_fall_dir, data[1], args.input_notfall_dir, output_dir) 
 
-        i = -1
-        for i in range(args.number_of_parallel_processes-1):
-            sublist_of_files.append(list_of_files[i*d:(i+1)*d])
-        sublist_of_files.append(list_of_files[(i+1)*d:])
+    # # split files evenly to be processed by each process
+    # data = []
+    # for i in [args.input_fall_dir, args.input_notfall_dir]:
+    #     list_of_files = os.listdir(i)
+    #     d = len(list_of_files)//args.number_of_parallel_processes
+    #     sublist_of_files = []
 
-        data.append(sublist_of_files)
+    #     i = -1
+    #     for i in range(args.number_of_parallel_processes-1):
+    #         sublist_of_files.append(list_of_files[i*d:(i+1)*d])
+    #     sublist_of_files.append(list_of_files[(i+1)*d:])
 
-    # retrieve coordinates from npy files, and return the minimum number of coordinates in a frame across all files
-    global_minimum_coordinates_count = float("inf")
-    output_file_list = []
-    with multiprocessing.Manager() as manager:
-        global_dict = manager.dict()  # used for processes to send the minimum number of coordinates in a frame to the master process
-        process_list = []
-        for i in range(args.number_of_parallel_processes):
-            output_dir = os.path.join(temp_folder_dir, "{0}_coordinates_dict.json".format(i))
-            output_file_list.append(output_dir)
+    #     data.append(sublist_of_files)
 
-            p = multiprocessing.Process(target=retrieve_coordinates, args=(i, global_dict, data[0][i], args.input_fall_dir, data[1][i], args.input_notfall_dir, output_dir))
-            p.start()
-            process_list.append(p)
+    # # retrieve coordinates from npy files, and return the minimum number of coordinates in a frame across all files
+    # global_minimum_coordinates_count = float("inf")
+    # output_file_list = []
+    # with multiprocessing.Manager() as manager:
+    #     global_dict = manager.dict()  # used for processes to send the minimum number of coordinates in a frame to the master process
+    #     process_list = []
+    #     for i in range(args.number_of_parallel_processes):
+    #         output_dir = os.path.join(temp_folder_dir, "{0}_coordinates_dict.json".format(i))
+    #         output_file_list.append(output_dir)
 
-        for i in range(args.number_of_parallel_processes):
-            process_list[i].join()
+    #         p = multiprocessing.Process(target=retrieve_coordinates, args=(i, global_dict, data[0][i], args.input_fall_dir, data[1][i], args.input_notfall_dir, output_dir))
+    #         p.start()
+    #         process_list.append(p)
+
+    #     for i in range(args.number_of_parallel_processes):
+    #         process_list[i].join()
     
-        for i in global_dict:
-            global_minimum_coordinates_count = min(global_minimum_coordinates_count, global_dict[i])
+    #     for i in global_dict:
+    #         global_minimum_coordinates_count = min(global_minimum_coordinates_count, global_dict[i])
         
-    # ensure that all json files have only the minimum number of coordinates across all files (i.e. same number of coordinates)
-    process_list = []
-    for i in range(args.number_of_parallel_processes):
-        p = multiprocessing.Process(target=minimum_coordinates, args=(i, output_file_list[i], global_minimum_coordinates_count))
-        p.start()
-        process_list.append(p)
+    # # ensure that all json files have only the minimum number of coordinates across all files (i.e. same number of coordinates)
+    # process_list = []
+    # for i in range(args.number_of_parallel_processes):
+    #     p = multiprocessing.Process(target=minimum_coordinates, args=(i, output_file_list[i], global_minimum_coordinates_count))
+    #     p.start()
+    #     process_list.append(p)
 
-    for i in range(args.number_of_parallel_processes):
-        process_list[i].join()
+    # for i in range(args.number_of_parallel_processes):
+    #     process_list[i].join()
     
-    # combine all json files into one final json file
-    for each_category in ["fall", "not_fall"]:
-        if each_category == "fall":
-            file_to_write = args.output_fall_dir
-        elif each_category == "not_fall":
-            file_to_write = args.output_notfall_dir
+    # # combine all json files into one final json file
+    # for each_category in ["fall", "not_fall"]:
+    #     if each_category == "fall":
+    #         file_to_write = args.output_fall_dir
+    #     elif each_category == "not_fall":
+    #         file_to_write = args.output_notfall_dir
 
-        all_data_in_category = []
-        for each_file in output_file_list:
-            with open(each_file) as readfile:
-                data = json.load(readfile)
-                # print("data: ", data)
+    #     all_data_in_category = []
+    #     for each_file in output_file_list:
+    #         with open(each_file) as readfile:
+    #             data = json.load(readfile)
+    #             # print("data: ", data)
 
-                all_data_in_each_metadata = []
-                all_files_in_category = data[each_category]
-                for each_file in all_files_in_category:
-                    all_frames_in_category = all_files_in_category[each_file]
-                    # all_frames_data = [each_file]
-                    all_frames_data = [each_file]
-                    for each_frame in all_frames_in_category:
-                        all_values_in_frame = each_frame["coordinates_dict"]
-                        each_frame_data = []
-                        for each_value in all_values_in_frame:
-                            all_coordinates_for_value = all_values_in_frame[each_value]
-                            each_frame_data += all_coordinates_for_value
-                        # print("each_frame_data: {0}".format(each_frame_data))
-                        all_frames_data.append(each_frame_data)
-                    # print("all_frames_data: {0}".format(all_frames_data))
-                    all_data_in_each_metadata.append(all_frames_data)
-                # print("all_data_in_each_metadata: ", all_data_in_each_metadata)
-            all_data_in_category += all_data_in_each_metadata
-        # print("all_data_in_category: ", all_data_in_category)
+    #             all_data_in_each_metadata = []
+    #             all_files_in_category = data[each_category]
+    #             for each_file in all_files_in_category:
+    #                 all_frames_in_category = all_files_in_category[each_file]
+    #                 # all_frames_data = [each_file]
+    #                 all_frames_data = [each_file]
+    #                 for each_frame in all_frames_in_category:
+    #                     all_values_in_frame = each_frame["coordinates_dict"]
+    #                     each_frame_data = []
+    #                     for each_value in all_values_in_frame:
+    #                         all_coordinates_for_value = all_values_in_frame[each_value]
+    #                         each_frame_data += all_coordinates_for_value
+    #                     # print("each_frame_data: {0}".format(each_frame_data))
+    #                     all_frames_data.append(each_frame_data)
+    #                 # print("all_frames_data: {0}".format(all_frames_data))
+    #                 all_data_in_each_metadata.append(all_frames_data)
+    #             # print("all_data_in_each_metadata: ", all_data_in_each_metadata)
+    #         all_data_in_category += all_data_in_each_metadata
+    #     # print("all_data_in_category: ", all_data_in_category)
 
-        all_data_in_category = np.array(all_data_in_category)
-        np.save(file_to_write, all_data_in_category)
+    #     all_data_in_category = np.array(all_data_in_category)
+    #     np.save(file_to_write, all_data_in_category)
  
     # cleanup
-    subprocess.run("rm -rf {0}".format(temp_folder_dir), shell=True)
+    # subprocess.run("rm -rf {0}".format(temp_folder_dir), shell=True)

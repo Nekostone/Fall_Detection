@@ -1,5 +1,4 @@
 import os
-import csv
 import sys
 import json
 import subprocess
@@ -8,7 +7,6 @@ import unittest
 
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
-
 
 class RetriveCoordinates_function_positive(unittest.TestCase):
     temp_folder_dir = os.path.join(current_dir, "temp")
@@ -278,6 +276,10 @@ class OverallIntegration_positive(unittest.TestCase):
             ]
         ])
         np.save(temp_dir, data)
+        for i in range(3, 5, 1):
+            temp_dir = os.path.join(self.samplefalldata_dir, "sample{0}.npy".format(i))
+            np.save(temp_dir, data)
+
         temp_dir = os.path.join(self.samplenotfalldata_dir, "sample1.npy")
         data = np.array([
             [
@@ -306,6 +308,9 @@ class OverallIntegration_positive(unittest.TestCase):
             ]
         ])
         np.save(temp_dir, data)
+        for i in range(3, 5, 1):
+            temp_dir = os.path.join(self.samplenotfalldata_dir, "sample{0}.npy".format(i))
+            np.save(temp_dir, data)
 
     
     def test_main(self):
@@ -314,7 +319,7 @@ class OverallIntegration_positive(unittest.TestCase):
         input_notfall_dir = self.samplenotfalldata_dir
         output_fall_dir = os.path.join(self.sampledata_dir, "output_fall.npy")
         output_notfall_dir = os.path.join(self.sampledata_dir, "output_notfall.npy")
-        number_of_parallel_processes = 2
+        number_of_parallel_processes = 10
         subprocess.run("python3 {0} --input_fall_dir {1} --input_notfall_dir {2} --output_fall_dir {3} --output_notfall_dir {4} --number_of_parallel_processes {5}".format(program_dir, input_fall_dir, input_notfall_dir, output_fall_dir, output_notfall_dir, number_of_parallel_processes), shell=True)
 
         fall_output = np.load(output_fall_dir, allow_pickle=True)
@@ -323,6 +328,16 @@ class OverallIntegration_positive(unittest.TestCase):
         to_compare_fall = np.array([
             [
                 'sample1.npy', 
+                [[0, 0], [0, 1]],
+                [[0, 0], [0, 1]]
+            ],
+            [
+                'sample3.npy', 
+                [[0, 0], [0, 1]],
+                [[0, 0], [0, 1]]
+            ],
+            [
+                'sample4.npy', 
                 [[0, 0], [0, 1]],
                 [[0, 0], [0, 1]]
             ],
@@ -339,7 +354,17 @@ class OverallIntegration_positive(unittest.TestCase):
                 [[0, 0], [0, 1]]
             ],
             [
-                'sample2.npy',
+                'sample3.npy', 
+                [[0, 0], [0, 1]],
+                [[0, 0], [0, 1]]
+            ],
+            [
+                'sample4.npy', 
+                [[0, 0], [0, 1]],
+                [[0, 0], [0, 1]]
+            ],
+            [
+                'sample2.npy', 
                 [[0, 0], [0, 1]],
                 [[0, 0], [0, 1]]
             ]
