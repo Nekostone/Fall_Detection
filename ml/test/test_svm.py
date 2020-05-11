@@ -12,16 +12,22 @@ class FlattenArrays_function_positive(unittest.TestCase):
 
     def setUp(self):
         self.sampledata = np.array([
-            [
-                'sample1.npy', 
-                [[1, 2], [3, 4]],
-                [[5, 6], [7, 8]]
-            ],
-            [
-                'sample2.npy', 
-                [[11, 12], [13, 14]],
-                [[15, 16], [17, 18]]
-            ]
+            {
+                1: [
+                    [1,2],
+                    [1,3]
+                ],
+                2: [
+                    [2,1],
+                    [2,2]
+                ]
+            },
+            {
+                3: [
+                    [3,1],
+                    [3,2]
+                ]
+            }
         ])
     
     def test_main(self):
@@ -30,9 +36,11 @@ class FlattenArrays_function_positive(unittest.TestCase):
         import svm
 
         result = svm.flatten_array(self.sampledata)
-        to_compare = np.array([[1,2,3,4,5,6,7,8], [11,12,13,14,15,16,17,18]])
+        # print("result: {0}".format(result))
+        to_compare = np.array([1, 2, 1, 3, 2, 1, 2, 2, 3, 1, 3, 2])
+        compare_result = (result == to_compare).all()
 
-        self.assertTrue((result==to_compare).all())
+        self.assertTrue(compare_result)
     
 if __name__ == "__main__":
     unittest.main()

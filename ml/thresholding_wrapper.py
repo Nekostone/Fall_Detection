@@ -15,8 +15,8 @@ def processfiles(process_id, program_abs_dir, list_of_fall_files, input_fall_fol
         for each_file in each_category[0]:
             input_dir = os.path.join(each_category[1], each_file)
             output_dir = os.path.join(each_category[2], each_file)
-            print("Process {0}: processing file {1}/{2}; input_dir: {3}".format(process_id, count, total_length, input_dir))
-            subprocess.run(["python3", program_abs_dir, "--input_filename", input_dir, "--output_filename", output_dir, "--width_of_ignored_pixels", str(args.width_of_ignored_pixels), "--width_of_rim_for_comparison", str(args.width_of_rim_for_comparison)])
+            # print("Process {0}: processing file {1}/{2}; input_dir: {3}".format(process_id, count, total_length, input_dir))
+            subprocess.call(["python3", program_abs_dir, "--input_filename", input_dir, "--output_filename", output_dir, "--width_of_ignored_pixels", str(args.width_of_ignored_pixels), "--width_of_rim_for_comparison", str(args.width_of_rim_for_comparison)])
             # subprocess.run("python3 {0} --input_filename {1} --output_filename {2} --width_of_ignored_pixels {3} --width_of_rim_for_comparison {4}".format(program_abs_dir, input_dir, output_dir, args.width_of_ignored_pixels, args.width_of_rim_for_comparison), shell=True)
             count += 1
 
@@ -34,7 +34,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # create containing folders if does not exist
-    folder_name = "{0}_{1}".format(args.width_of_ignored_pixels, args.width_of_rim_for_comparison)
+    folder_name = "{0}_{1}".format(args.width_of_rim_for_comparison, args.width_of_ignored_pixels)
     processed_dir = os.path.join(args.output_dir, folder_name)
     processed_fall_dir = os.path.join(processed_dir, "fall")
     processed_notfall_dir = os.path.join(processed_dir, "not_fall")
@@ -66,4 +66,4 @@ if __name__ == "__main__":
     for i in range(args.number_of_parallel_processes):
         process_list[i].join()
 
-print("done")
+# print("done")

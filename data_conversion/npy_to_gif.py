@@ -19,10 +19,12 @@ import PIL.Image as Image
 import argparse
 
 def numpy_to_gif(input_folder, input_file,output_folder):
+#     filename = input_file
+#     giflist = []
+#     os.chdir(input_folder)
+#     data = np.load(filename+".npy")
     filename = input_file
-    giflist = []
-    os.chdir(input_folder)
-    data = np.load(filename+".npy")
+    data = np.load(os.path.join(input_folder, input_file+".npy"))
     #print(data[0].shape)
     minSNR = 0
     maxSNR = 6
