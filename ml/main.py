@@ -44,6 +44,8 @@ import json
 import numpy as np
 
 from feature_extract.extractcoords_and_flatten import extractcoords_and_flatten
+from feature_extract.energy_features_and_flatten import energy_features_and_flatten
+from feature_extract.range_features_and_flatten import range_features_and_flatten 
 
 from filters.downsample import downsample
 from filters.remove_center import remove_center
@@ -54,40 +56,37 @@ from models.svm import svm
 
 if __name__ == "__main__":
     vanilla_labelled_dir = "/home/xubuntu/Desktop/sensor_data/labelled_vanilla"
-    pre_train_dir = "/home/xubuntu/Desktop/sensor_data/temp"
-   
-    # DOWNSAMPLE 
-    print("Starting downsampling...")
-    post_downsample = []
+    pre_train_dir = "/home/xubuntu/Desktop/Fall_Detection/ml/temp"
+
+    # recreate temp folder
+    if os.path.exists(pre_train_dir):
+        subprocess.call("rm -rf {0}".format(pre_train_dir), shell=True)
+        print("ERROR - folder {0} already exist. Deleting old folder...".format(pre_train_dir))
+    os.mkdir(pre_train_dir)
+
+    count = 0
+    total_count = len(os.listdir(vanilla_labelled_dir))
     for each_file in os.listdir(vanilla_labelled_dir):
         each_file_dir = os.path.join(vanilla_labelled_dir, each_file)
-
         input_array = np.load(each_file_dir, allow_pickle=True)
+
+        # DOWNSAMPLE 
         downsample_factor = 2
-
         output = downsample(input_array, downsample_factor)
-        post_downsample.extend(output)
 
-    # REMOVE CENTER
-    print("Starting remove_center...")
-    post_remove_center = []
-    for each_array in post_downsample:
-        output = remove_center(each_array)
-        post_remove_center.append(output)
-    post_downsample.clear()
+        for each_downsampled_output in output:
+            # REMOVE CENTER
+            each_downsampled_output = remove_center(each_downsampled_output)
 
-    # EXTRACT COORDS AND FLATTEN
-    print("Starting extratcoords_and_flatten...")
-    count = 0
-    for each_array in post_remove_center:
-        extracted_per_frame = 200
-        output = extractcoords_and_flatten(each_array, extracted_per_frame)
-        output_dir = os.path.join(pre_train_dir, "{0}.npy".format(count))
-        np.save(output_dir, output, allow_pickle=True)
+            # range features
+            output = range_features_and_flatten(input_array)
+            output_dir = os.path.join(pre_train_dir, "{0}.npy".format(count))
+            np.save(output_dir, output, allow_pickle=True)
 
-        count += 1
-    post_remove_center.clear()
-    
+            print("{0}/{1} processed.".format(count, total_count))
+
+            count += 1
+
     # SVM
     print("Starting model training and testing...")
     train_percentage = 0.6

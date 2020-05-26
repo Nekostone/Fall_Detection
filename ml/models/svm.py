@@ -76,11 +76,14 @@ def create_train_test(folder_dir, train_percentage):
         train_x.append(input_array[0])
         train_y.append(input_array[1])
 
+    test_fall_count = 0
     for each_testfile in fall_filenames:
         each_file_dir = os.path.join(folder_dir, each_testfile)
         input_array = np.load(each_file_dir, allow_pickle=True)
         test_x.append(input_array[0])
         test_y.append(input_array[1])
+
+        test_fall_count += 1
 
     for i in range(train_nonfalldata_total):
         each_file = random.choice(nonfall_filenames)
@@ -91,12 +94,17 @@ def create_train_test(folder_dir, train_percentage):
         train_x.append(input_array[0])
         train_y.append(input_array[1])
 
+    test_nonfall_count = 0
     for each_testfile in nonfall_filenames:
         each_file_dir = os.path.join(folder_dir, each_testfile)
         input_array = np.load(each_file_dir, allow_pickle=True)
         test_x.append(input_array[0])
         test_y.append(input_array[1])
-    print("len(train_x): {0}\nlen(train_y): {1}\nlen(test_x): {2}\nlen(test_y): {3}".format(len(train_x), len(train_y), len(test_x), len(test_y)))
+
+        test_nonfall_count += 1
+
+    print("test_fall_count: {0}, test_nonfall_count: {1}".format(test_fall_count, test_nonfall_count))
+    print("len(train_x): {0}; len(test_x): {1}".format(len(train_x), len(test_x)))
     
 
     return train_x, train_y, test_x, test_y
