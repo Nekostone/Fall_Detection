@@ -1,8 +1,9 @@
 import numpy as np
 # frame_gif_sequence assumes the form of a radar-data cube:
-# 0th dimension: Range
+# 0th dimension: Range (innermost array)
 # 1st dimension: Doppler
-# 2nd dimension: Time
+# 2nd dimension: Time (outermost array)
+# visually verified to tally with our data ^
 
 # First iteration, try with frame_energy, delta_energy, and energy_temporal_derivative
 
@@ -26,8 +27,11 @@ def energy_features_and_flatten(input_array: np.ndarray) -> np.ndarray:
 
     # retrieve features separately
     frame_energy_output = frame_energy(data)
+    # print("frame_energy_output.shape: {0}".format(frame_energy_output.shape))
     delta_energy_output = delta_energy(frame_energy_output)
+    # print("delta_energy_output.shape: {0}".format(delta_energy_output.shape))
     energy_temporal_derivative_output = energy_temporal_derivative(frame_energy_output)
+    # print("energy_temporal_derivative_output.shape: {0}".format(energy_temporal_derivative_output.shape))
 
     # concat all as features for one recording
     output_data = np.concatenate((frame_energy_output, delta_energy_output), axis=0)

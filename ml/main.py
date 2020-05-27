@@ -79,7 +79,7 @@ if __name__ == "__main__":
             each_downsampled_output = remove_center(each_downsampled_output)
 
             # range features
-            output = range_features_and_flatten(input_array)
+            output = range_features_and_flatten(each_downsampled_output)
             output_dir = os.path.join(pre_train_dir, "{0}.npy".format(count))
             np.save(output_dir, output, allow_pickle=True)
 

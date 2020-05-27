@@ -103,8 +103,8 @@ def create_train_test(folder_dir, train_percentage):
 
         test_nonfall_count += 1
 
-    print("test_fall_count: {0}, test_nonfall_count: {1}".format(test_fall_count, test_nonfall_count))
-    print("len(train_x): {0}; len(test_x): {1}".format(len(train_x), len(test_x)))
+    # print("test_fall_count: {0}, test_nonfall_count: {1}".format(test_fall_count, test_nonfall_count))
+    # print("len(train_x): {0}; len(test_x): {1}".format(len(train_x), len(test_x)))
     
 
     return train_x, train_y, test_x, test_y
