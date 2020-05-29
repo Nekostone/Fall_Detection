@@ -24,5 +24,4 @@ v2.0
   - labelling will be embedded into each datapoint (not depending on parent dir names)
 - Make remove center 3 lines a filter in the preprocessing phase
 - Write function to label data from csv file
-- More tests
-
+- Write functions to retrieve energy and range features (given by xavier)
