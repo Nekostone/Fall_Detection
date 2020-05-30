@@ -104,17 +104,20 @@ def flatten_array(input_data):
     """
     Flattens each array that represents a file
     :input_data: numpy array
-    """
+    # """
     output = []
 
     input_data = input_data.flatten(order='C')
+    print("Flattened Input Data")
+    print(input_data)
 
     for each_frame in input_data:
         for each_value in each_frame:
+            print("Each Value")
+            print(each_value)
             output += each_frame[each_value]
 
     output = np.array(output).flatten(order='C')
-
     return output
 
 
@@ -163,7 +166,7 @@ def main(input_fall_dir, input_notfall_dir, percentage_train, number_of_parallel
 
     for i in range(number_of_parallel_processes):
         process_list[i].join()
-    create train and test npy arrays (both include a similar proportion of fall and nonfall files)
+    #create train and test npy arrays (both include a similar proportion of fall and nonfall files)
     temp_fall_files = copy.deepcopy(os.listdir(temp_fall_dir))
     temp_notfall_files = copy.deepcopy(os.listdir(temp_notfall_dir))
 
