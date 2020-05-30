@@ -14,6 +14,7 @@ import random
 import subprocess
 import copy
 from models.svm import create_train_test
+import pickle
 # falldata = np.load('',allow_pickle=True)
 # nonfalldata = np.load('C:\\Users\\user\\Documents\\Capstone\\DownsampleData\\downsample2\\20200319_manypeople_2_0.npy',allow_pickle=True)
 
@@ -68,17 +69,24 @@ from models.svm import create_train_test
 def randomforest(folder_dir, train_percentage):
     train_x, train_y, test_x, test_y = create_train_test(folder_dir, train_percentage)
 
-    rfc = RandomForestClassifier()
-    print("Fitting Random Forest")
-    rfc.fit(train_x, train_y)
-    print("Complete fitting")
+    # rfc = RandomForestClassifier()
+    # print("Fitting Random Forest")
+    # rfc.fit(train_x, train_y)
+    # print("Complete fitting")
     true_positive = 0
     true_negative = 0
     false_positive = 0
     false_negative = 0
+    print("Testing pickle")
+    rfc = pickle.load(open("/home/chongyicheng/Capstone/Fall_Detection/randomforest.sav", 'rb'))
+    isFirst = True
     for i in range(len(test_x)):
         predict = rfc.predict([test_x[i]])
         actual = test_y[i]
+        if isFirst == True:
+            print("Array for frames look like this")
+            print(test_x[i])
+            isFirst = False
 
         """
         True Positive (TP) : Observation is positive, and is predicted to be positive.
@@ -102,5 +110,9 @@ def randomforest(folder_dir, train_percentage):
             else:
                 print("??? - {0}".format(predict))
 
+    # filename = 'randomforest.sav'
+    # pickle.dump(rfc, open(os.path.join("/home/chongyicheng/Capstone/Fall_Detection",filename), 'wb'))
+
     return (true_positive, true_negative, false_positive, false_negative)
+
     

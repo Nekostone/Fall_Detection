@@ -98,6 +98,6 @@ if __name__ == "__main__":
 
     # Random Forest
     print("Starting Random Forest Classification training and testing")
-    train_percentage = 0.9
+    train_percentage = 0.7
     true_positive, true_negative, false_positive, false_negative = randomforest(pre_train_dir, train_percentage)
     print("true_positive: {0}, true_negative: {1}, false_positive: {2}, false_negative: {3}".format(true_positive, true_negative, false_positive, false_negative))

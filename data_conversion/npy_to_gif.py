@@ -24,7 +24,7 @@ def numpy_to_gif(input_folder, input_file,output_folder):
 #     os.chdir(input_folder)
 #     data = np.load(filename+".npy")
     filename = input_file
-    data = np.load(os.path.join(input_folder, input_file+".npy"))
+    data = np.load(os.path.join(input_folder, input_file+".npy"), allow_pickle=True)
     #print(data[0].shape)
     minSNR = 0
     maxSNR = 6
