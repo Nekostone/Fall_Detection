@@ -51,12 +51,15 @@ from filters.downsample import downsample
 from filters.remove_center import remove_center
 
 from models.svm import svm
-
+from models.randomforest import randomforest
 
 
 if __name__ == "__main__":
-    vanilla_labelled_dir = "/home/xubuntu/Desktop/sensor_data/labelled_vanilla"
-    pre_train_dir = "/home/xubuntu/Desktop/Fall_Detection/ml/temp"
+    # vanilla_labelled_dir = "/home/xubuntu/Desktop/sensor_data/labelled_vanilla"
+    # pre_train_dir = "/home/xubuntu/Desktop/Fall_Detection/ml/temp"
+    vanilla_labelled_dir = "/home/chongyicheng/Capstone/labelled_vanilla"
+    pre_train_dir = "/home/chongyicheng/Capstone/Fall_Detection/ml/temp"
+
 
     # recreate temp folder
     if os.path.exists(pre_train_dir):
@@ -88,7 +91,13 @@ if __name__ == "__main__":
             count += 1
 
     # SVM
-    print("Starting model training and testing...")
-    train_percentage = 0.6
-    true_positive, true_negative, false_positive, false_negative = svm(pre_train_dir, train_percentage)
+    # print("Starting model training and testing...")
+    # train_percentage = 0.6
+    # true_positive, true_negative, false_positive, false_negative = svm(pre_train_dir, train_percentage)
+    # print("true_positive: {0}, true_negative: {1}, false_positive: {2}, false_negative: {3}".format(true_positive, true_negative, false_positive, false_negative))
+
+    # Random Forest
+    print("Starting Random Forest Classification training and testing")
+    train_percentage = 0.9
+    true_positive, true_negative, false_positive, false_negative = randomforest(pre_train_dir, train_percentage)
     print("true_positive: {0}, true_negative: {1}, false_positive: {2}, false_negative: {3}".format(true_positive, true_negative, false_positive, false_negative))
