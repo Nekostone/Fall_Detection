@@ -1,6 +1,6 @@
 import numpy as np
 
-def downsample(input_array, downsample_factor):
+def downsample_time(input_array, downsample_factor):
     data = input_array[0]
     label = input_array[1]
     output_array = []

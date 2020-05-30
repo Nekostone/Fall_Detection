@@ -1,42 +1,3 @@
-"""
-Subtypes of each phase
-- filters
-  - downsample
-  - remove_center
-- feature extraction
-  - extractcoords_and_flatten
-- model
-  - svm
-
-config.json example:
-{
-    filters: [
-        {
-            name: downsample,
-            by_factor_of: 2,
-            remember: True
-        },
-        {
-            name: remove_center,
-            remember: True
-        }
-    ],
-    feature_extraction: [
-        {
-            name: extractcoords_and_flatten,
-            number_of_coords: 200,
-            remember: False
-        }
-    ],
-    model: [
-        {
-            name: svm
-        }
-    ]
-}
-
-"""
-
 import argparse
 import os
 import subprocess
@@ -46,12 +7,18 @@ import numpy as np
 from feature_extract.extractcoords_and_flatten import extractcoords_and_flatten
 from feature_extract.energy_features_and_flatten import energy_features_and_flatten
 from feature_extract.range_features_and_flatten import range_features_and_flatten 
+from feature_extract.downsample_doppler import downsample_doppler
 
-from filters.downsample import downsample
+from filters.downsample_time import downsample_time
 from filters.remove_center import remove_center
 
 from models.svm import svm
 
+from misc.normalize_to_train import normalize_to_train
+from misc.energy_features_normalized import energy_features_normalized
+from misc.range_features_normalized import range_features_normalized
+
+from split_train_test import split_train_test
 
 
 if __name__ == "__main__":
@@ -65,30 +32,35 @@ if __name__ == "__main__":
     os.mkdir(pre_train_dir)
 
     count = 0
-    total_count = len(os.listdir(vanilla_labelled_dir))
     for each_file in os.listdir(vanilla_labelled_dir):
         each_file_dir = os.path.join(vanilla_labelled_dir, each_file)
         input_array = np.load(each_file_dir, allow_pickle=True)
 
-        # DOWNSAMPLE 
-        downsample_factor = 2
-        output = downsample(input_array, downsample_factor)
+        # downsample_time 
+        downsample_time_factor = 10
+        output = downsample_time(input_array, downsample_time_factor)
 
         for each_downsampled_output in output:
-            # REMOVE CENTER
+            # remove center
             each_downsampled_output = remove_center(each_downsampled_output)
 
-            # range features
-            output = range_features_and_flatten(each_downsampled_output)
-            output_dir = os.path.join(pre_train_dir, "{0}.npy".format(count))
-            np.save(output_dir, output, allow_pickle=True)
+            # downsampled doppler
+            each_downsampled_output = downsample_doppler(each_downsampled_output, 2)
 
-            print("{0}/{1} processed.".format(count, total_count))
+            # save array
+            each_downsampled_output_dir = os.path.join(pre_train_dir, "{0}.npy".format(count))
+            np.save(each_downsampled_output_dir, each_downsampled_output, allow_pickle=True)
+            print("{0} processed.".format(count))
 
             count += 1
 
     # SVM
     print("Starting model training and testing...")
     train_percentage = 0.6
-    true_positive, true_negative, false_positive, false_negative = svm(pre_train_dir, train_percentage)
+    train_x, train_y, test_x, test_y = split_train_test(pre_train_dir, train_percentage)
+    train_x, test_x = range_features_normalized(train_x, test_x)
+    true_positive, true_negative, false_positive, false_negative = svm(train_x, train_y, test_x, test_y)
     print("true_positive: {0}, true_negative: {1}, false_positive: {2}, false_negative: {3}".format(true_positive, true_negative, false_positive, false_negative))
+
+    # cleanup
+    subprocess.call("rm -rf {0}".format(pre_train_dir), shell=True)

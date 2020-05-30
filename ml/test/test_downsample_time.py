@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 
-from ml.filters.downsample import downsample
+from ml.filters.downsample_time import downsample_time
 
 class Downsample(unittest.TestCase):
     def test_positive_0(self):
@@ -21,7 +21,7 @@ class Downsample(unittest.TestCase):
                 input_array = np.concatenate((input_array, to_concatenate), axis=0)
         input_array = np.array([input_array, 1])
 
-        output_array = downsample(input_array, downsample_factor)
+        output_array = downsample_time(input_array, downsample_factor)
 
         to_compare_0 = np.full((2,3,3), -1)
         to_compare_1 = np.full((2,3,3), 0)

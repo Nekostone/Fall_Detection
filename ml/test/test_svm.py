@@ -3,11 +3,11 @@ import numpy as np
 import os
 import subprocess
 
-from ml.models.svm import create_train_test
+from ml.split_train_test import split_train_test
 
 file_dir = os.path.dirname(os.path.realpath(__file__))
 
-class Create_train_test(unittest.TestCase):
+class Split_train_test(unittest.TestCase):
     def setUp(self):
         # create temp folder to store function metadata
         self.temp_dir = os.path.join(file_dir, 'temp/')
@@ -46,7 +46,7 @@ class Create_train_test(unittest.TestCase):
 
 
     def test_positive_1(self):
-        train_x, train_y, test_x, test_y = create_train_test(self.temp_dir, 0.75)
+        train_x, train_y, test_x, test_y = split_train_test(self.temp_dir, 0.75)
 
         # check if train and test datasets have the correct number of datapoints
         self.assertEqual(len(train_x), 6)
