@@ -15,9 +15,9 @@ from filters.remove_center import remove_center
 from models.svm import svm
 from models.randomforest import randomforest
 
-from misc.normalize_to_train import normalize_to_train
-from misc.energy_features_normalized import energy_features_normalized
-from misc.range_features_normalized import range_features_normalized
+# from misc.normalize_to_train import normalize_to_train
+# from misc.energy_features_normalized import energy_features_normalized
+# from misc.range_features_normalized import range_features_normalized
 
 from split_train_test import split_train_test
 
@@ -41,9 +41,9 @@ if __name__ == "__main__":
         input_array = np.load(each_file_dir, allow_pickle=True)
 
         # downsample_time 
-        downsample_time_factor = 10
+        # downsample_time_factor = 10
+        downsample_time_factor = 25
         output = downsample_time(input_array, downsample_time_factor)
-
         for each_downsampled_output in output:
             # remove center
             each_downsampled_output = remove_center(each_downsampled_output)
@@ -51,25 +51,31 @@ if __name__ == "__main__":
             # downsampled doppler
             each_downsampled_output = downsample_doppler(each_downsampled_output, 2)
 
+            #range features
+            final_output = range_features_and_flatten(each_downsampled_output)
             # save array
-            each_downsampled_output_dir = os.path.join(pre_train_dir, "{0}.npy".format(count))
-            np.save(each_downsampled_output_dir, each_downsampled_output, allow_pickle=True)
+            #each_downsampled_output_dir = os.path.join(pre_train_dir, "{0}.npy".format(count))
+            #np.save(each_downsampled_output_dir, each_downsampled_output, allow_pickle=True)
+            final_output_dir = os.path.join(pre_train_dir, "{0}.npy".format(count))
+            np.save(final_output_dir,final_output,allow_pickle=True)
             print("{0} processed.".format(count))
 
             count += 1
 
-    # SVM
-    print("Starting model training and testing...")
-    train_percentage = 0.6
-    train_x, train_y, test_x, test_y = split_train_test(pre_train_dir, train_percentage)
-    train_x, test_x = range_features_normalized(train_x, test_x)
-    true_positive, true_negative, false_positive, false_negative = svm(train_x, train_y, test_x, test_y)
-    print("true_positive: {0}, true_negative: {1}, false_positive: {2}, false_negative: {3}".format(true_positive, true_negative, false_positive, false_negative))
+    # # SVM
+    # print("Starting model training and testing...")
+    # train_percentage = 0.6
+    # train_x, train_y, test_x, test_y = split_train_test(pre_train_dir, train_percentage)
+    # train_x, test_x = range_features_normalized(train_x, test_x)
+    # true_positive, true_negative, false_positive, false_negative = svm(train_x, train_y, test_x, test_y)
+    # print("true_positive: {0}, true_negative: {1}, false_positive: {2}, false_negative: {3}".format(true_positive, true_negative, false_positive, false_negative))
 
     # cleanup
-    subprocess.call("rm -rf {0}".format(pre_train_dir), shell=True)
+    #subprocess.call("rm -rf {0}".format(pre_train_dir), shell=True)
     # Random Forest
     print("Starting Random Forest Classification training and testing")
     train_percentage = 0.7
-    true_positive, true_negative, false_positive, false_negative = randomforest(pre_train_dir, train_percentage)
+    train_x, train_y, test_x, test_y = split_train_test(pre_train_dir, train_percentage)
+    true_positive, true_negative, false_positive, false_negative = randomforest(train_x, train_y, test_x, test_y)
+    print("true_positive: {0}, true_negative: {1}, false_positive: {2}, false_negative: {3}".format(true_positive, true_negative, false_positive, false_negative))
 
