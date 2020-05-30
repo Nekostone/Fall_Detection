@@ -33,21 +33,21 @@ def range_features_and_flatten(input_array: np.ndarray) -> np.ndarray:
     # retrieve features and flatten separately
     range_profile_output = range_profile(data)
     # print("range_profile_output: {0}".format(range_profile_output))
-    print("range_profile_output.shape: {0}".format(range_profile_output.shape))
+    # print("range_profile_output.shape: {0}".format(range_profile_output.shape))
 
     # range_delta_output = range_delta(range_profile_output).flatten()
     range_delta_output = range_delta(range_profile_output)
     # print("range_delta_output: {0}".format(range_delta_output))
-    print("range_delta_output.shape: {0}".format(range_delta_output.shape))
+    # print("range_delta_output.shape: {0}".format(range_delta_output.shape))
 
     dopp_profile_output = dopp_profile(data)
     # print("dopp_profile_output: {0}".format(dopp_profile_output))
-    print("dopp_profile_output.shape: {0}".format(dopp_profile_output.shape))
+    # print("dopp_profile_output.shape: {0}".format(dopp_profile_output.shape))
 
     # dopp_delta_output = dopp_delta(dopp_profile_output).flatten()
     dopp_delta_output = dopp_delta(dopp_profile_output)
     # print("dopp_delta_output: {0}".format(dopp_delta_output))
-    print("dopp_delta_output.shape: {0}".format(dopp_delta_output.shape))
+    # print("dopp_delta_output.shape: {0}".format(dopp_delta_output.shape))
 
     range_profile_output = range_profile_output.flatten()
     range_delta_output = range_delta_output.flatten()
