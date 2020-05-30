@@ -44,12 +44,13 @@ if __name__ == "__main__":
         # downsample_time_factor = 10
         downsample_time_factor = 25
         output = downsample_time(input_array, downsample_time_factor)
-        for each_downsampled_output in output:
-            # remove center
-            each_downsampled_output = remove_center(each_downsampled_output)
 
-            # downsampled doppler
+        for each_downsampled_output in output:
+            
+            # downsampled doppler(2)
             each_downsampled_output = downsample_doppler(each_downsampled_output, 2)
+            # remove center(1)
+            each_downsampled_output = remove_center(each_downsampled_output)
 
             #range features
             final_output = range_features_and_flatten(each_downsampled_output)
@@ -61,6 +62,7 @@ if __name__ == "__main__":
             print("{0} processed.".format(count))
 
             count += 1
+
 
     # # SVM
     # print("Starting model training and testing...")

@@ -27,7 +27,7 @@ def randomforest(train_x, train_y, test_x, test_y):
     false_positive = 0
     false_negative = 0
     #print("Testing pickle")
-    # rfc = pickle.load(open("/home/chongyicheng/Capstone/Fall_Detection/randomforest.sav", 'rb'))
+    #rfc = pickle.load(open("/home/chongyicheng/Capstone/Fall_Detection/randomforest_iter2.sav", 'rb'))
     isFirst = True
     for i in range(len(test_x)):
         predict = rfc.predict([test_x[i]])
@@ -59,8 +59,8 @@ def randomforest(train_x, train_y, test_x, test_y):
             else:
                 print("??? - {0}".format(predict))
 
-    filename = 'randomforest_iter2.sav'
-    pickle.dump(rfc, open(os.path.join("/home/chongyicheng/Capstone/Fall_Detection",filename), 'wb'))
+    # filename = 'randomforest_iter2.sav'
+    # pickle.dump(rfc, open(os.path.join("/home/chongyicheng/Capstone/Fall_Detection",filename), 'wb'))
 
     return (true_positive, true_negative, false_positive, false_negative)
 
