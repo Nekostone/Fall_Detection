@@ -3,6 +3,7 @@ import sys
 import numpy as np
 import serial
 import time
+import pickle
 
 from serial.tools import list_ports
 
@@ -12,6 +13,7 @@ from PySide2.QtGui import QPixmap, QImage, QFont, QColor
 from PySide2.QtCore import QRunnable, Signal, Slot, QThreadPool
 
 cfg_file = r"D:\Downloads\Telegram Desktop\profile_heat_map.cfg"
+svm_weights = "/home/xubuntu/Desktop/weights.pickle"
 
 class COM_Ports(QComboBox):
     def __init__(self):
@@ -45,6 +47,10 @@ class Radar_Plot(QLabel):
 
         self.ml_frames = []
 
+        # load svm model weights
+        with open(svm_weights, "rb") as readfile:
+            self.model = pickle.loads(readfile.read())
+
     def parse_complete_frame(self, frame_string): # takes a byte string containing the whole frame excluding magic word
         frame = frame_string[36:-20] # extract frame data
         data_arr = [int.from_bytes(frame[i:i+2], byteorder = "little", signed = False) for i in range(0, len(frame), 2)] # convert to int
@@ -62,6 +68,13 @@ class Radar_Plot(QLabel):
         
         # send for svm
         else:
+            # svm code here
+            output = self.model.predict(self.ml_frames)
+            if output == 1:
+                print("Label: Is fall")
+            else:
+                print("Label: lolno")
+
             # extract features and do svm code here
             # print the answer or something, i'll find a way to hook it up to the actual gui after
             self.ml_frames.pop(0)   #remove oldest frame           
@@ -146,6 +159,7 @@ class Main_Window(QWidget):
 
         self.sig.connect(self.plot.update_image)          
 
+
     def start_callback(self):
         self.dataport = serial.Serial(port = self.data_port.currentText()[-5:-1], baudrate=921600)
         self.cfgport = serial.Serial(port= self.cfg_port.currentText()[-5:-1], baudrate=115200)
@@ -197,7 +211,6 @@ class Main_Window(QWidget):
             self.sig.emit(buffer)
                 
     def do_ml(self):
-        # svm code here
         output = False 
         self.log.append(str(output)) # log to output terminal
 
