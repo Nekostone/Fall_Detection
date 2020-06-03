@@ -1,10 +1,24 @@
 ### Fall detection
-1. data_conversion
+1. data_conversion  
    - Converts data between .bin, .gif, and .npy
 2. ml
    - Contains functions that supports or enables ML functionalities
+   - filters contains functions that
+     - are applied before train and test sets are generated
+     - maintains the shape of the input data and
+     - maintains the meanings of each dimension (i.e. 3rd dimension represents time, 1st dimension represent doppler etc.)
+   - feature_extract contains functions that
+     - are applied before train and test sets are generated
+     - are not filters
+   - misc contains functions that are neither filters
+
 
 ### Logs
+v3.0
+- Add global and local normalization of range_profile() and doppler_profile()
+- New filter - Downsampling of doppler axis by factor of 2
+- Added ml_training - having only the filters/feature_extraction that is required to train SVM for final implementation, and most importantly transposes each frame before training and testing, and saves trained model weights
+
 v2.0
 - Restructuring of source code
   - three phases: 
