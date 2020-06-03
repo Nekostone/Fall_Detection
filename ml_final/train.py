@@ -4,20 +4,20 @@ import subprocess
 import json
 import numpy as np
 
-from range_features_and_flatten_localnorm import range_features_and_flatten_localnorm
-from downsample_doppler import downsample_doppler
+from _range_features_and_flatten_localnorm import range_features_and_flatten_localnorm
+from _downsample_doppler import downsample_doppler
 
-from downsample_time import downsample_time
-from remove_center import remove_center
+from _downsample_time import downsample_time
+from _remove_center import remove_center
 
-from svm import svm
-from split_train_test import split_train_test
+from _svm import svm
+from _split_train_test import split_train_test
 
 
 if __name__ == "__main__":
     vanilla_labelled_dir = "/home/xubuntu/Desktop/sensor_data/labelled_vanilla"
-    pre_train_dir = "/home/xubuntu/Desktop/Fall_Detection/ml_training/temp"
-    weights_dir = "/home/xubuntu/Desktop/Fall_Detection/ml_training/weights.pickle"
+    pre_train_dir = "/home/xubuntu/Desktop/Fall_Detection/ml_final/temp"
+    weights_dir = "/home/xubuntu/Desktop/Fall_Detection/ml_final/weights.pickle"
 
     # recreate temp folder
     if os.path.exists(pre_train_dir):

@@ -23,7 +23,7 @@ from split_train_test import split_train_test
 
 if __name__ == "__main__":
     vanilla_labelled_dir = "/home/xubuntu/Desktop/sensor_data/labelled_vanilla"
-    pre_train_dir = "/home/xubuntu/Desktop/Fall_Detection/ml/temp"
+    pre_train_dir = "/home/xubuntu/Desktop/Fall_Detection/ml_exploration/temp"
 
     # recreate temp folder
     if os.path.exists(pre_train_dir):

@@ -1,4 +1,8 @@
 #! usr/bin/env/python
+
+"""
+Please run this script from repo's root dir (some imports are relative to the repo's root dir*)
+"""
 import sys
 import numpy as np
 import serial
@@ -11,6 +15,9 @@ from serial.tools import list_ports
 from PySide2.QtWidgets import QWidget, QPushButton, QComboBox, QGridLayout, QApplication, QLabel, QTextEdit
 from PySide2.QtGui import QPixmap, QImage, QFont, QColor
 from PySide2.QtCore import QRunnable, Signal, Slot, QThreadPool
+
+# SVM preprocessing and feature extractoin layers
+from ml_final.preprocess_actualdata import preprocess  # * <- leik dis wan
 
 cfg_file = r"D:\Downloads\Telegram Desktop\profile_heat_map.cfg"
 svm_weights = "/home/xubuntu/Desktop/weights.pickle"
@@ -69,7 +76,8 @@ class Radar_Plot(QLabel):
         # send for svm
         else:
             # svm code here
-            output = self.model.predict(self.ml_frames)
+            preprocessed = preprocess(self.ml_frames)
+            output = self.model.predict(preprocessed)
             if output == 1:
                 print("Label: Is fall")
             else:
