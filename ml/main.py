@@ -7,6 +7,7 @@ import numpy as np
 from feature_extract.extractcoords_and_flatten import extractcoords_and_flatten
 from feature_extract.energy_features_and_flatten import energy_features_and_flatten
 from feature_extract.range_features_and_flatten import range_features_and_flatten 
+from feature_extract.range_features_and_flatten_localnorm import range_features_and_flatten_localnorm
 from feature_extract.downsample_doppler import downsample_doppler
 
 from filters.downsample_time import downsample_time
@@ -15,7 +16,6 @@ from filters.remove_center import remove_center
 from models.svm import svm
 
 from misc.normalize_to_train import normalize_to_train
-from misc.energy_features_normalized import energy_features_normalized
 from misc.range_features_normalized import range_features_normalized
 
 from split_train_test import split_train_test
@@ -37,7 +37,7 @@ if __name__ == "__main__":
         input_array = np.load(each_file_dir, allow_pickle=True)
 
         # downsample_time 
-        downsample_time_factor = 10
+        downsample_time_factor = 25
         output = downsample_time(input_array, downsample_time_factor)
 
         for each_downsampled_output in output:
@@ -46,6 +46,9 @@ if __name__ == "__main__":
 
             # downsampled doppler
             each_downsampled_output = downsample_doppler(each_downsampled_output, 2)
+
+            # extract range features and normalize across all elements in one recording
+            each_downsampled_output = range_features_and_flatten_localnorm(each_downsampled_output)
 
             # save array
             each_downsampled_output_dir = os.path.join(pre_train_dir, "{0}.npy".format(count))
@@ -58,7 +61,6 @@ if __name__ == "__main__":
     print("Starting model training and testing...")
     train_percentage = 0.6
     train_x, train_y, test_x, test_y = split_train_test(pre_train_dir, train_percentage)
-    train_x, test_x = range_features_normalized(train_x, test_x)
     true_positive, true_negative, false_positive, false_negative = svm(train_x, train_y, test_x, test_y)
     print("true_positive: {0}, true_negative: {1}, false_positive: {2}, false_negative: {3}".format(true_positive, true_negative, false_positive, false_negative))
 

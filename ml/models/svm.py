@@ -1,4 +1,5 @@
 from sklearn import svm as svm_model
+import time
 import numpy as np
 
 def svm(train_x, train_y, test_x, test_y):
