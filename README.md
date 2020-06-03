@@ -15,7 +15,7 @@
 
 ### Logs
 v3.0
-- Add global normalization of range_profile() and doppler_profile()
+- Add global and local normalization of range_profile() and doppler_profile()
 - New filter - Downsampling of doppler axis by factor of 2
 
 v2.0
