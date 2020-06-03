@@ -17,6 +17,7 @@
 v3.0
 - Add global and local normalization of range_profile() and doppler_profile()
 - New filter - Downsampling of doppler axis by factor of 2
+- Added ml_training - having only the filters/feature_extraction that is required to train SVM for final implementation, and most importantly transposes each frame before training and testing, and saves trained model weights
 
 v2.0
 - Restructuring of source code
