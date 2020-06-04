@@ -17,10 +17,11 @@ from PySide2.QtGui import QPixmap, QImage, QFont, QColor
 from PySide2.QtCore import QRunnable, Signal, Slot, QThreadPool
 
 # SVM preprocessing and feature extractoin layers
+sys.path.append(r"D:\Documents\SUTD\Capstone\Fall_Detection\ml_final")
 from ml_final.preprocess_actualdata import preprocess  # * <- leik dis wan
 
 cfg_file = r"D:\Downloads\Telegram Desktop\profile_heat_map.cfg"
-svm_weights = "/home/xubuntu/Desktop/weights.pickle"
+svm_weights = r"D:\Downloads\Telegram Desktop\weights (2).pickle"
 
 class COM_Ports(QComboBox):
     def __init__(self):
@@ -70,11 +71,12 @@ class Radar_Plot(QLabel):
         data_arr = np.concatenate((data_arr[:,32:64],data_arr[:,0:32]), axis=1)
 
         # Store frames, yes it's not memory efficient but heck lmao
-        if len(self.ml_frames) < 2:
+        if len(self.ml_frames) == 0:
             self.ml_frames.append(data_arr)
         
         # send for svm
         else:
+            self.ml_frames.append(data_arr)
             # svm code here
             preprocessed = preprocess(self.ml_frames)
             output = self.model.predict(preprocessed)

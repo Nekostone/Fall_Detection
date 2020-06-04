@@ -15,6 +15,9 @@ from _split_train_test import split_train_test
 
 
 def preprocess(input_array):
+    first_frame = np.expand_dims(input_array[0], axis=0)
+    second_frame = np.expand_dims(input_array[1], axis=0)
+    input_array = np.concatenate((first_frame, second_frame), axis=0)
     # i'm slapping some random label so that i can reuse code lol
     input_array = np.array([input_array, -1])
 
