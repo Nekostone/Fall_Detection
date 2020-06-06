@@ -7,6 +7,7 @@ import sys
 import numpy as np
 import serial
 import time
+from datetime import datetime
 import pickle
 
 from serial.tools import list_ports
@@ -16,12 +17,14 @@ from PySide2.QtWidgets import QWidget, QPushButton, QComboBox, QGridLayout, QApp
 from PySide2.QtGui import QPixmap, QImage, QFont, QColor
 from PySide2.QtCore import QRunnable, Signal, Slot, QThreadPool
 
+#Change all paths to your own when using this
 # SVM preprocessing and feature extractoin layers
 sys.path.append(r"D:\Documents\SUTD\Capstone\Fall_Detection\ml_final")
 from ml_final.preprocess_actualdata import preprocess  # * <- leik dis wan
 
-cfg_file = r"D:\Downloads\Telegram Desktop\profile_heat_map.cfg"
-svm_weights = r"D:\Downloads\Telegram Desktop\weights (2).pickle"
+cfg_file = r"D:\Downloads\Telegram Desktop\profile_heat_map.cfg" 
+svm_weights = r"D:\Downloads\Telegram Desktop\weights_5frame.pickle"
+#output_folder = r"D:\Documents\SUTD\Capstone\Data"
 
 class COM_Ports(QComboBox):
     def __init__(self):
@@ -53,6 +56,8 @@ class Radar_Plot(QLabel):
         self.setPixmap(QPixmap(self.img).scaled(768,768)) 
         self.setMargin(100)
 
+        self.counter = 5
+        #self.counter2 = 0 # for data purposes
         self.ml_frames = []
 
         # load svm model weights
@@ -69,29 +74,48 @@ class Radar_Plot(QLabel):
 
         # fftshift
         data_arr = np.concatenate((data_arr[:,32:64],data_arr[:,0:32]), axis=1)
+        # data_arr = np.log10(data_arr)
 
         # Store frames, yes it's not memory efficient but heck lmao
-        if len(self.ml_frames) == 0:
+        if len(self.ml_frames) < self.counter:
             self.ml_frames.append(data_arr)
         
         # send for svm
         else:
             self.ml_frames.append(data_arr)
+
+            # For saving data 
+            # d = np.asarray(self.ml_frames)
+            # d = np.moveaxis(d, 1,-1)
+            # print(d.shape)
+            # if self.counter2 < 100:
+            #     print(self.counter2)
+            #     output_path = output_folder + r"\tm_nonfall{}.npy".format(self.counter2)
+            #     np.save(output_path, d)
+            #     self.counter2 += 1
+            # self.ml_frames = []
+
             # svm code here
             preprocessed = preprocess(self.ml_frames)
             output = self.model.predict(preprocessed)
             if output == 1:
-                print("Label: Is fall")
+                t = datetime.now()
+                current_time_s = t.second
+                current_time_ms = t.microsecond/1000
+                print("{0}:{1} is fall".format(current_time_s, current_time_ms))
             else:
-                print("Label: lolno")
+                t = datetime.now()
+                current_time_s = t.second
+                current_time_ms = t.microsecond/1000
+                print("{0}:{1} is not fall".format(current_time_s, current_time_ms))
 
-            # extract features and do svm code here
-            # print the answer or something, i'll find a way to hook it up to the actual gui after
-            self.ml_frames.pop(0)   #remove oldest frame           
+            self.ml_frames.pop(0)   #remove oldest frame
+            # TODO: Push to main gui instead of print
+            
 
         # plot
         data_arr = 65535 - data_arr #invert colors
-        data_arr = data_arr.astype(np.uint16) # divide by 64 to bring it down to within 16 bits
+        data_arr = data_arr.astype(np.uint16) 
         self.data = data_arr
         self.img = QImage(self.data, 64, 128, QImage.Format_Grayscale16)
         self.setPixmap(QPixmap(self.img).scaled(768,768))
