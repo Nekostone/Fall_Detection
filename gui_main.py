@@ -23,7 +23,7 @@ sys.path.append(r"D:\Documents\SUTD\Capstone\Fall_Detection\ml_final")
 from ml_final.preprocess_actualdata import preprocess  # * <- leik dis wan
 
 cfg_file = r"D:\Downloads\Telegram Desktop\profile_heat_map.cfg" 
-svm_weights = r"D:\Downloads\Telegram Desktop\weights_5frame.pickle"
+svm_weights = r"D:\Downloads\Telegram Desktop\weights (3).pickle"
 #output_folder = r"D:\Documents\SUTD\Capstone\Data"
 
 class COM_Ports(QComboBox):
@@ -56,7 +56,8 @@ class Radar_Plot(QLabel):
         self.setPixmap(QPixmap(self.img).scaled(768,768)) 
         self.setMargin(100)
 
-        self.counter = 5
+        self.counter = 4
+        self.centroid = None
         #self.counter2 = 0 # for data purposes
         self.ml_frames = []
 
@@ -67,14 +68,15 @@ class Radar_Plot(QLabel):
     def parse_complete_frame(self, frame_string): # takes a byte string containing the whole frame excluding magic word
         frame = frame_string[36:-20] # extract frame data
         data_arr = [int.from_bytes(frame[i:i+2], byteorder = "little", signed = False) for i in range(0, len(frame), 2)] # convert to int
-        data_arr = np.asarray(data_arr).reshape((256,64))[0:128,]
+        data_arr = np.asarray(data_arr).reshape((256,64))[0:128]
 
         # get range doppler (TI mmwave demo algo)
         #data_arr = np.add(data_arr[0::2,] , data_arr[1::2,] * 256)
 
         # fftshift
         data_arr = np.concatenate((data_arr[:,32:64],data_arr[:,0:32]), axis=1)
-        # data_arr = np.log10(data_arr)
+        data_arr = np.where(data_arr == 0, 0.001, data_arr)
+        #data_arr = np.log10(data_arr)
 
         # Store frames, yes it's not memory efficient but heck lmao
         if len(self.ml_frames) < self.counter:
@@ -114,12 +116,42 @@ class Radar_Plot(QLabel):
             
 
         # plot
-        data_arr = 65535 - data_arr #invert colors
-        data_arr = data_arr.astype(np.uint16) 
+        #data_arr = data_arr - np.min(data_arr) #invert colors 
+        data_arr = (data_arr - np.min(data_arr))/(np.max(data_arr) - np.min(data_arr))
+        self.compute_centroid(data_arr)
+        data_arr = (255* data_arr).astype(np.uint8)
         self.data = data_arr
-        self.img = QImage(self.data, 64, 128, QImage.Format_Grayscale16)
+        self.img = QImage(self.data, 64, 128, QImage.Format_Grayscale8)
         self.setPixmap(QPixmap(self.img).scaled(768,768))
         self.repaint()
+
+    def compute_centroid(self, data):
+        doppler_profile = np.sum(data, axis = 0)
+        range_profile = np.sum(data, axis = 1)
+
+        #print("Max values R: {0}, D:{1}".format(np.argmax(doppler_profile), np.argmax(range_profile)))
+        #print("Max R:{0}, Min R: {1}, Max D:{2}, Min D: {3}".format(np.max(range_profile), np.min(range_profile), np.max(doppler_profile), np.min(doppler_profile)))
+
+        range_x = np.array([i for i in range(1,129)])
+        doppler_x = np.array([i for i in range(1,65)])
+        
+        range_centroid_x = np.dot(range_profile, range_x)/np.sum(range_profile)
+        doppler_centroid_x = np.dot(doppler_profile, doppler_x)/np.sum(doppler_profile)
+
+        range_centroid_y = np.dot(range_profile/2, range_profile)/sum(range_profile)
+        doppler_centroid_y = np.dot(doppler_profile/2, doppler_profile)/np.sum(doppler_profile)
+
+        cent = (range_centroid_x, doppler_centroid_x)
+
+        if self.centroid == None:
+            self.centroid = cent
+            accel = 0
+
+        else:
+            accel = (self.centroid[1] - cent[1])/0.4
+            self.centroid = cent
+
+        #print("Centroid is at ({0}, {1}), acceleration: {2}".format(range_centroid_x, doppler_centroid_x, accel))
 
 
     @Slot(list)
