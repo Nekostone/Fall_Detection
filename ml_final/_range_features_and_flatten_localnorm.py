@@ -21,6 +21,7 @@ def range_features_and_flatten_localnorm(input_array: np.ndarray) -> np.ndarray:
     range_profile_output = range_profile(data)
     mean = np.mean(range_profile_output)
     std = np.std(range_profile_output)
+    range_profile_output = range_profile_output.flatten()
     range_profile_output = (range_profile_output - mean)/std
     # print("range_profile_output: {0}".format(range_profile_output))
     # print("range_profile_output.shape: {0}".format(range_profile_output.shape))
@@ -28,12 +29,11 @@ def range_features_and_flatten_localnorm(input_array: np.ndarray) -> np.ndarray:
     dopp_profile_output = dopp_profile(data)
     mean = np.mean(dopp_profile_output)
     std = np.std(dopp_profile_output)
+    dopp_profile_output = dopp_profile_output.flatten()
     dopp_profile_output = (dopp_profile_output - mean)/std
     # print("dopp_profile_output: {0}".format(dopp_profile_output))
     # print("dopp_profile_output.shape: {0}".format(dopp_profile_output.shape))
 
-    range_profile_output = range_profile_output.flatten()
-    dopp_profile_output = dopp_profile_output.flatten()
 
     # concat all features into a 1D array
     output_data = np.concatenate((range_profile_output, dopp_profile_output), axis=0)

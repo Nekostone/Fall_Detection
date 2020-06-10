@@ -14,6 +14,9 @@
 
 
 ### Logs
+v4.0 (git branch "gui")
+- Added ml_final - storing the code used to train weights and run live demo (and their respective tests)
+
 v3.0
 - Add global and local normalization of range_profile() and doppler_profile()
 - New filter - Downsampling of doppler axis by factor of 2

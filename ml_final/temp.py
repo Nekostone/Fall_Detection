@@ -1,24 +1,5 @@
 import numpy as np
+import os
+import subprocess
 
-x = np.array([
-        [
-            [1,2,3],
-            [1,2,3],
-            [1,2,3]
-        ],
-        [
-            [1,2,3],
-            [1,2,3],
-            [1,2,3]
-        ],
-        [
-            [1,2,3],
-            [1,2,3],
-            [1,2,3]
-        ]
-    ])
 
-for i in range(x.shape[0]):
-    x[i,:,:] = np.transpose(x[i,:,:])
-
-print(x)
