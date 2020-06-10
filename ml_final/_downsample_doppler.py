@@ -30,6 +30,5 @@ def downsample_doppler(input_array, downsample_factor, center_of_bright_line=64)
         else:
             to_concat = np.expand_dims(output_array, axis=0)
             output = np.concatenate((output, to_concat), axis=0)
-    print("output.shape: {0}".format(output.shape))
     return np.array([output, label])
     
