@@ -23,7 +23,7 @@ sys.path.append(r"D:\Documents\SUTD\Capstone\Fall_Detection\ml_final")
 from ml_final.preprocess_actualdata import preprocess  # * <- leik dis wan
 
 cfg_file = r"D:\Downloads\Telegram Desktop\profile_heat_map.cfg" 
-svm_weights = r"D:\Downloads\Telegram Desktop\weights_5frame.pickle"
+svm_weights = r"D:\Downloads\Telegram Desktop\weights (4).pickle"
 #output_folder = r"D:\Documents\SUTD\Capstone\Data"
 
 class COM_Ports(QComboBox):
@@ -56,7 +56,7 @@ class Radar_Plot(QLabel):
         self.setPixmap(QPixmap(self.img).scaled(768,768)) 
         self.setMargin(100)
 
-        self.counter = 5
+        self.counter = 4
         #self.counter2 = 0 # for data purposes
         self.ml_frames = []
 
@@ -74,7 +74,8 @@ class Radar_Plot(QLabel):
 
         # fftshift
         data_arr = np.concatenate((data_arr[:,32:64],data_arr[:,0:32]), axis=1)
-        # data_arr = np.log10(data_arr)
+        data_arr = np.where(data_arr == 0, 0.001, data_arr)
+        data_arr = np.log10(data_arr)
 
         # Store frames, yes it's not memory efficient but heck lmao
         if len(self.ml_frames) < self.counter:
@@ -114,11 +115,12 @@ class Radar_Plot(QLabel):
             
 
         # plot
-        data_arr = 65535 - data_arr #invert colors
-        data_arr = data_arr.astype(np.uint16) 
-        self.data = data_arr
-        self.img = QImage(self.data, 64, 128, QImage.Format_Grayscale16)
-        self.setPixmap(QPixmap(self.img).scaled(768,768))
+        #data_arr = 65535 - data_arr #invert colors
+        data_arr = 255 * (data_arr - np.min(data_arr))/(np.max(data_arr) - np.min(data_arr))
+        data_arr = data_arr.astype(np.uint8) 
+        self.data = data_arr 
+        self.img = QImage(self.data, 64, 128, QImage.Format_Grayscale8)
+        self.setPixmap(QPixmap(self.img).scaled(384,768))
         self.repaint()
 
 
