@@ -5,6 +5,7 @@ Please run this script from repo's root dir (some imports are relative to the re
 """
 import sys
 import numpy as np
+import scipy as sp
 import serial
 import time
 from datetime import datetime
@@ -23,7 +24,8 @@ sys.path.append(r"D:\Documents\SUTD\Capstone\Fall_Detection\ml_final")
 from ml_final.preprocess_actualdata import preprocess  # * <- leik dis wan
 
 cfg_file = r"D:\Downloads\Telegram Desktop\profile_heat_map.cfg" 
-svm_weights = r"D:\Downloads\Telegram Desktop\weights (3).pickle"
+#svm_weights = r"D:\Downloads\Telegram Desktop\weights (3).pickle"
+svm_weights = r"D:\Downloads\Telegram Desktop\weights_5frame.pickle"
 #output_folder = r"D:\Documents\SUTD\Capstone\Data"
 
 class COM_Ports(QComboBox):
@@ -76,7 +78,7 @@ class Radar_Plot(QLabel):
         # fftshift
         data_arr = np.concatenate((data_arr[:,32:64],data_arr[:,0:32]), axis=1)
         data_arr = np.where(data_arr == 0, 0.001, data_arr)
-        #data_arr = np.log10(data_arr)
+        data_arr = np.log10(data_arr)
 
         # Store frames, yes it's not memory efficient but heck lmao
         if len(self.ml_frames) < self.counter:
@@ -122,23 +124,23 @@ class Radar_Plot(QLabel):
         data_arr = (255* data_arr).astype(np.uint8)
         self.data = data_arr
         self.img = QImage(self.data, 64, 128, QImage.Format_Grayscale8)
-        self.setPixmap(QPixmap(self.img).scaled(768,768))
+        self.setPixmap(QPixmap(self.img).scaled(384 ,768))
         self.repaint()
 
     def compute_centroid(self, data):
+        data[:,31:34] = 0
         doppler_profile = np.sum(data, axis = 0)
         range_profile = np.sum(data, axis = 1)
 
-        #print("Max values R: {0}, D:{1}".format(np.argmax(doppler_profile), np.argmax(range_profile)))
-        #print("Max R:{0}, Min R: {1}, Max D:{2}, Min D: {3}".format(np.max(range_profile), np.min(range_profile), np.max(doppler_profile), np.min(doppler_profile)))
+        print("Max data: {0} Range profile: {1}".format(np.max(data),np.argmax(range_profile)))
 
-        range_x = np.array([i for i in range(1,129)])
+        range_x = np.array([i - 0.5 for i in range(1,129)])
         doppler_x = np.array([i for i in range(1,65)])
         
         range_centroid_x = np.dot(range_profile, range_x)/np.sum(range_profile)
         doppler_centroid_x = np.dot(doppler_profile, doppler_x)/np.sum(doppler_profile)
 
-        range_centroid_y = np.dot(range_profile/2, range_profile)/sum(range_profile)
+        range_centroid_y = (np.dot(range_profile/2, range_profile))/np.sum(range_profile)
         doppler_centroid_y = np.dot(doppler_profile/2, doppler_profile)/np.sum(doppler_profile)
 
         cent = (range_centroid_x, doppler_centroid_x)
@@ -151,7 +153,7 @@ class Radar_Plot(QLabel):
             accel = (self.centroid[1] - cent[1])/0.4
             self.centroid = cent
 
-        #print("Centroid is at ({0}, {1}), acceleration: {2}".format(range_centroid_x, doppler_centroid_x, accel))
+        #print("Centroid is at ({0}, {1}), acceleration: {2} \n Values: {3}, {4}".format(range_centroid_x, doppler_centroid_x, accel, range_centroid_y, doppler_centroid_y))
 
 
     @Slot(list)
