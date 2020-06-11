@@ -6,12 +6,11 @@ import numpy as np
 
 from _range_features_and_flatten_localnorm import range_features_and_flatten_localnorm
 from _downsample_doppler import downsample_doppler
-
 from _downsample_time import downsample_time
 from _remove_center import remove_center
-
 from _svm import svm
 from _split_train_test import split_train_test
+from _feature_defs import feature_defs
 
 
 if __name__ == "__main__":
@@ -37,7 +36,7 @@ if __name__ == "__main__":
         input_array[0]= np.moveaxis(input_array[0], 1, -1)
 
         input_array = remove_center(input_array, 31, 34)
-        input_array = range_features_and_flatten_localnorm(input_array)
+        input_array = feature_defs(input_array)
 
         # save array
         output_dir = os.path.join(pre_train_dir, "{0}.npy".format(count))
@@ -60,7 +59,7 @@ if __name__ == "__main__":
         for each_downsampled_output in output:
             each_downsampled_output = remove_center(each_downsampled_output)
             each_downsampled_output = downsample_doppler(each_downsampled_output, 2)
-            each_downsampled_output = range_features_and_flatten_localnorm(each_downsampled_output)
+            each_downsampled_output = feature_defs(each_downsampled_output)
 
             # save array
             each_downsampled_output_dir = os.path.join(pre_train_dir, "{0}.npy".format(count))

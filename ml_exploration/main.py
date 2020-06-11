@@ -9,6 +9,7 @@ from feature_extract.energy_features_and_flatten import energy_features_and_flat
 from feature_extract.range_features_and_flatten import range_features_and_flatten 
 from feature_extract.range_features_and_flatten_localnorm import range_features_and_flatten_localnorm
 from feature_extract.downsample_doppler import downsample_doppler
+from feature_extract.feature_defs import first_iteration, second_iteration
 
 from filters.downsample_time import downsample_time
 from filters.remove_center import remove_center
@@ -37,7 +38,7 @@ if __name__ == "__main__":
         input_array = np.load(each_file_dir, allow_pickle=True)
 
         # downsample_time 
-        downsample_time_factor = 25
+        downsample_time_factor = 10
         output = downsample_time(input_array, downsample_time_factor)
 
         for each_downsampled_output in output:
@@ -47,8 +48,8 @@ if __name__ == "__main__":
             # downsampled doppler
             each_downsampled_output = downsample_doppler(each_downsampled_output, 2)
 
-            # extract range features and normalize across all elements in one recording
-            each_downsampled_output = range_features_and_flatten_localnorm(each_downsampled_output)
+            # each_downsampled_output = first_iteration(each_downsampled_output)
+            each_downsampled_output = second_iteration(each_downsampled_output)
 
             # save array
             each_downsampled_output_dir = os.path.join(pre_train_dir, "{0}.npy".format(count))

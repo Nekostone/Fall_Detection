@@ -1,8 +1,5 @@
 import numpy as np
-# frame_gif_sequence assumes the form of a radar-data cube:
-# 0th dimension: Range
-# 1st dimension: Doppler
-# 2nd dimension: Time
+
 
 # Second iteration, try with range_profile, dopp_profile, range_delta, and dopp_delta
 
