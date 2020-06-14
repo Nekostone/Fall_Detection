@@ -1,0 +1,11 @@
+#for ubuntu setup run
+sudo apt-add-repository ppa:mosquitto-dev/mosquitto-ppa
+sudo apt-get update
+#for broker
+sudo apt install mosquitto
+#for client
+sudo apt install mosquitto-clients 
+#for client(python)
+pip3 install paho-mqtt
+#sudo apt-get install libwebsockets-dev
+#Password for mosquitto:capstone
