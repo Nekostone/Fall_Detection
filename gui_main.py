@@ -5,6 +5,7 @@ Please run this script from repo's root dir (some imports are relative to the re
 """
 import sys
 import numpy as np
+import scipy as sp
 import serial
 import time
 from datetime import datetime
@@ -23,8 +24,9 @@ sys.path.append(r"D:\Documents\SUTD\Capstone\Fall_Detection\ml_final")
 from ml_final.preprocess_actualdata import preprocess  # * <- leik dis wan
 
 cfg_file = r"D:\Downloads\Telegram Desktop\profile_heat_map.cfg" 
-svm_weights = r"D:\Downloads\Telegram Desktop\weights (4).pickle"
-#output_folder = r"D:\Documents\SUTD\Capstone\Data"
+#svm_weights = r"D:\Downloads\Telegram Desktop\weights (3).pickle"
+svm_weights = r"D:\Downloads\Telegram Desktop\weights (5).pickle"
+output_folder = r"D:\Documents\SUTD\Capstone\Data"
 
 class COM_Ports(QComboBox):
     def __init__(self):
@@ -57,7 +59,8 @@ class Radar_Plot(QLabel):
         self.setMargin(100)
 
         self.counter = 4
-        #self.counter2 = 0 # for data purposes
+        self.centroid = None
+        self.counter2 = 0 # for data purposes
         self.ml_frames = []
 
         # load svm model weights
@@ -67,15 +70,15 @@ class Radar_Plot(QLabel):
     def parse_complete_frame(self, frame_string): # takes a byte string containing the whole frame excluding magic word
         frame = frame_string[36:-20] # extract frame data
         data_arr = [int.from_bytes(frame[i:i+2], byteorder = "little", signed = False) for i in range(0, len(frame), 2)] # convert to int
-        data_arr = np.asarray(data_arr).reshape((256,64))[0:128,]
+        data_arr = np.asarray(data_arr).reshape((256,64))[0:128]
 
         # get range doppler (TI mmwave demo algo)
         #data_arr = np.add(data_arr[0::2,] , data_arr[1::2,] * 256)
 
         # fftshift
         data_arr = np.concatenate((data_arr[:,32:64],data_arr[:,0:32]), axis=1)
-        data_arr = np.where(data_arr == 0, 0.001, data_arr)
-        data_arr = np.log10(data_arr)
+        #data_arr = np.where(data_arr == 0, 0.001, data_arr)
+        #data_arr = np.log10(data_arr)
 
         # Store frames, yes it's not memory efficient but heck lmao
         if len(self.ml_frames) < self.counter:
@@ -85,7 +88,7 @@ class Radar_Plot(QLabel):
         else:
             self.ml_frames.append(data_arr)
 
-            # For saving data 
+            #For saving data 
             # d = np.asarray(self.ml_frames)
             # d = np.moveaxis(d, 1,-1)
             # print(d.shape)
@@ -101,26 +104,28 @@ class Radar_Plot(QLabel):
             output = self.model.predict(preprocessed)
             if output == 1:
                 t = datetime.now()
+                current_time_h = t.hour
+                current_time_min = t.minute
                 current_time_s = t.second
                 current_time_ms = t.microsecond/1000
-                print("{0}:{1} is fall".format(current_time_s, current_time_ms))
+                print("{0}:{1}:{2}:{3} is fall".format(current_time_h, current_time_min, current_time_s, current_time_ms))
+
             else:
                 t = datetime.now()
                 current_time_s = t.second
                 current_time_ms = t.microsecond/1000
-                print("{0}:{1} is not fall".format(current_time_s, current_time_ms))
+                # print("{0}:{1} is not fall".format(current_time_s, current_time_ms))
 
             self.ml_frames.pop(0)   #remove oldest frame
-            # TODO: Push to main gui instead of print
-            
+            # # TODO: Push to main gui instead of print
 
         # plot
-        #data_arr = 65535 - data_arr #invert colors
-        data_arr = 255 * (data_arr - np.min(data_arr))/(np.max(data_arr) - np.min(data_arr))
-        data_arr = data_arr.astype(np.uint8) 
-        self.data = data_arr 
+        #data_arr = data_arr - np.min(data_arr) #invert colors 
+        data_arr = (data_arr - np.min(data_arr))/(np.max(data_arr) - np.min(data_arr))
+        data_arr = (255* data_arr).astype(np.uint8)
+        self.data = data_arr
         self.img = QImage(self.data, 64, 128, QImage.Format_Grayscale8)
-        self.setPixmap(QPixmap(self.img).scaled(384,768))
+        self.setPixmap(QPixmap(self.img).scaled(768 ,768))
         self.repaint()
 
 

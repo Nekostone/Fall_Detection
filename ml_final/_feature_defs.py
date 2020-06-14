@@ -24,6 +24,7 @@ def com(dopp_or_range_profile: np.array) -> np.array: #takes in normalised outpu
 
     ycom    = np.multiply(ycoord, dopp_or_range_profile)
     ycom    = np.sum(ycom)/mass
+
     return np.array([xcom, ycom])
 
 
