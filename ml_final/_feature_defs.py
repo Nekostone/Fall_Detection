@@ -8,10 +8,12 @@ def dopp_profile(frame_gif_sequence: np.array) -> np.array: # get doppler profil
     return np.array([np.sum(i, axis=1) for i in frame_gif_sequence])
 
 def range_delta(range_profile_output: np.array) -> np.array: # takes in output of range_profile
-    return np.array([np.sum(range_profile_output, axis=1)])
+    diff = range_profile_output[1:]
+    return range_profile_output[:-1]-diff
 
 def dopp_delta(dopp_profile_output: np.array) -> np.array: # takes in output of dopp_profile
-    return np.array([np.sum(dopp_profile_output, axis=0)])
+    diff = dopp_profile_output[1:]
+    return dopp_profile_output[:-1]-diff
 
 def com(dopp_or_range_profile: np.array) -> np.array: #takes in normalised output of doppler or range profiles
     ycoord  = np.array([x/2 for x in dopp_or_range_profile])

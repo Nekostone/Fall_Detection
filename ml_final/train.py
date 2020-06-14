@@ -15,7 +15,8 @@ from _feature_defs import feature_defs
 
 if __name__ == "__main__":
     vanilla_labelled_dir = "/home/xubuntu/Desktop/sensor_data/labelled_vanilla"
-    tm_nonfall_dir = "/home/xubuntu/Desktop/sensor_data/tm_time10_doppler2"  # y-axis doppler, x-axis range, downsampled time by 10, downsampled doppler by 2
+    tm_nonfall_dir0 = "/home/xubuntu/Desktop/sensor_data/tm_time10_doppler2_0"  # y-axis doppler, x-axis range, downsampled time by 10, downsampled doppler by 2
+    tm_nonfall_dir1 = "/home/xubuntu/Desktop/sensor_data/tm_time10_doppler2_1"  # y-axis doppler, x-axis range, downsampled time by 10, downsampled doppler by 2
     pre_train_dir = "/home/xubuntu/Desktop/Fall_Detection/ml_final/temp"
     weights_dir = "/home/xubuntu/Desktop/Fall_Detection/ml_final/weights.pickle"
 
@@ -28,22 +29,23 @@ if __name__ == "__main__":
     # iterate for original data
     count = 0
     # iterate for special snowflake data
-    for each_file in os.listdir(tm_nonfall_dir):
-        each_file_dir = os.path.join(tm_nonfall_dir, each_file)
-        input_array = np.load(each_file_dir, allow_pickle=True)
+    for each_dir in [tm_nonfall_dir0, tm_nonfall_dir1]:
+    # for each_dir in [tm_nonfall_dir0]:
+        for each_file in os.listdir(each_dir):
+            each_file_dir = os.path.join(each_dir, each_file)
+            input_array = np.load(each_file_dir, allow_pickle=True)
 
-        # transpose each frame
-        input_array[0]= np.moveaxis(input_array[0], 1, -1)
+            # transpose each frame
+            input_array[0]= np.moveaxis(input_array[0], 1, -1)
+            input_array = remove_center(input_array, 31, 34)
+            input_array = feature_defs(input_array)
 
-        input_array = remove_center(input_array, 31, 34)
-        input_array = feature_defs(input_array)
+            # save array
+            output_dir = os.path.join(pre_train_dir, "{0}.npy".format(count))
+            np.save(output_dir, input_array, allow_pickle=True)
+            print("{0} processed".format(count))
 
-        # save array
-        output_dir = os.path.join(pre_train_dir, "{0}.npy".format(count))
-        np.save(output_dir, input_array, allow_pickle=True)
-        print("{0} processed".format(count))
-
-        count += 1
+            count += 1
 
     for each_file in os.listdir(vanilla_labelled_dir):
         each_file_dir = os.path.join(vanilla_labelled_dir, each_file)
@@ -62,6 +64,7 @@ if __name__ == "__main__":
             each_downsampled_output = feature_defs(each_downsampled_output)
 
             # save array
+            print("train: {0}".format(input_array.shape))
             each_downsampled_output_dir = os.path.join(pre_train_dir, "{0}.npy".format(count))
             np.save(each_downsampled_output_dir, each_downsampled_output, allow_pickle=True)
             print("{0} processed".format(count))
