@@ -17,6 +17,8 @@ from serial.tools import list_ports
 from PySide2.QtWidgets import QWidget, QPushButton, QComboBox, QGridLayout, QApplication, QLabel, QTextEdit
 from PySide2.QtGui import QPixmap, QImage, QFont, QColor
 from PySide2.QtCore import QRunnable, Signal, Slot, QThreadPool
+from PySide2.QtMultimedia import QCamera, QCameraInfo, QCameraViewfinderSettings
+from PySide2.QtMultimediaWidgets import QCameraViewfinder
 
 #Change all paths to your own when using this
 # SVM preprocessing and feature extractoin layers
@@ -24,8 +26,7 @@ sys.path.append(r"D:\Documents\SUTD\Capstone\Fall_Detection\ml_final")
 from ml_final.preprocess_actualdata import preprocess  # * <- leik dis wan
 
 cfg_file = r"D:\Downloads\Telegram Desktop\profile_heat_map.cfg" 
-#svm_weights = r"D:\Downloads\Telegram Desktop\weights (3).pickle"
-svm_weights = r"D:\Downloads\Telegram Desktop\weights (5).pickle"
+svm_weights = r"D:\Downloads\Telegram Desktop\weights (6).pickle"
 output_folder = r"D:\Documents\SUTD\Capstone\Data"
 
 class COM_Ports(QComboBox):
@@ -47,20 +48,44 @@ class Logging_Window(QTextEdit):
         self.setCurrentFont(QFont("Comic Sans",10))
         self.setLineWrapMode(QTextEdit.WidgetWidth)
         
+class Webcam(QCamera):
+    def __init__(self, cam):
+        super().__init__()
+        self.toggle_switch = 0 # 0: off, 1: on
+
+        self.viewfinder = QCameraViewfinder()
+        self.viewfinder.show()
+
+        self.settings = QCameraViewfinderSettings()
+        self.settings.setResolution(640,480)
+
+        self.setViewfinder(self.viewfinder)
+        self.setCaptureMode(QCamera.CaptureViewfinder)
+        self.setViewfinderSettings(self.settings)
+
+    @Slot()
+    def switch(self):
+        if self.toggle_switch == 0:
+            self.toggle_switch = 1
+            self.start()
+
+        else:
+            self.toggle_switch = 0
+            self.stop()
 
 class Radar_Plot(QLabel):
-    sig = Signal(list)
+    sig = Signal(int)
     def __init__(self):
         super().__init__()
         self.data_buffer = None
         self.data = np.zeros((128,64), np.uint16)
         self.img = QImage(self.data, 128, 64, QImage.Format_Grayscale16)
-        self.setPixmap(QPixmap(self.img).scaled(768,768)) 
-        self.setMargin(100)
+        self.setPixmap(QPixmap(self.img).scaled(640,640)) 
+        self.setMargin(40)
 
         self.counter = 4
         self.centroid = None
-        self.counter2 = 0 # for data purposes
+        #self.counter2 = 0 # for data purposes
         self.ml_frames = []
 
         # load svm model weights
@@ -102,22 +127,10 @@ class Radar_Plot(QLabel):
             # svm code here
             preprocessed = preprocess(self.ml_frames)
             output = self.model.predict(preprocessed)
-            if output == 1:
-                t = datetime.now()
-                current_time_h = t.hour
-                current_time_min = t.minute
-                current_time_s = t.second
-                current_time_ms = t.microsecond/1000
-                print("{0}:{1}:{2}:{3} is fall".format(current_time_h, current_time_min, current_time_s, current_time_ms))
-
-            else:
-                t = datetime.now()
-                current_time_s = t.second
-                current_time_ms = t.microsecond/1000
-                # print("{0}:{1} is not fall".format(current_time_s, current_time_ms))
+            self.sig.emit(output[0]) # pass to main app
 
             self.ml_frames.pop(0)   #remove oldest frame
-            # # TODO: Push to main gui instead of print
+
 
         # plot
         #data_arr = data_arr - np.min(data_arr) #invert colors 
@@ -125,7 +138,7 @@ class Radar_Plot(QLabel):
         data_arr = (255* data_arr).astype(np.uint8)
         self.data = data_arr
         self.img = QImage(self.data, 64, 128, QImage.Format_Grayscale8)
-        self.setPixmap(QPixmap(self.img).scaled(768 ,768))
+        self.setPixmap(QPixmap(self.img).scaled(640 ,640))
         self.repaint()
 
 
@@ -157,6 +170,7 @@ class Main_Window(QWidget):
     sig = Signal(list)
     def __init__(self):
         super().__init__()
+        self.available_cams = QCameraInfo.availableCameras()
         self.dataport = None
         self.cfgport = None
         self.stop = 0
@@ -165,15 +179,18 @@ class Main_Window(QWidget):
         self.threadpool = QThreadPool()
 
         self.layout = QGridLayout()
-        self.setFixedSize(1280,960)
+        self.setFixedSize(1920,960)
 
         #declare widgets
+        self.camera = Webcam(self.available_cams[0])
+
         self.cfg_port = COM_Ports()
         self.data_port = COM_Ports()
         self.plot = Radar_Plot() 
         self.log = Logging_Window()
         self.start_button = QPushButton("Start")
         self.stop_button = QPushButton("Stop")
+        self.camera_button = QPushButton("Toggle Camera")
 
         # declare and set up labels
         self.cfg_label = QLabel("Config")
@@ -184,22 +201,25 @@ class Main_Window(QWidget):
         #set button callbacks
         self.start_button.clicked.connect(self.start_callback)
         self.stop_button.clicked.connect(self.stop_callback)
+        self.camera_button.clicked.connect(self.camera.switch)
 
         #insert widgets to layout
-        self.layout.addWidget(self.cfg_label, 0, 1)
-        self.layout.addWidget(self.data_label, 0, 2)
-        self.layout.addWidget(self.cfg_port, 1, 1)
-        self.layout.addWidget(self.data_port, 1, 2)
-        self.layout.addWidget(self.start_button, 2, 1)
-        self.layout.addWidget(self.stop_button, 2, 2)
-        self.layout.addWidget(self.plot, 0, 0, 6 , 1)
-        self.layout.addWidget(self.log, 3, 1, 4, 2)
+        self.layout.addWidget(self.cfg_label, 0, 2)
+        self.layout.addWidget(self.data_label, 0, 3)
+        self.layout.addWidget(self.cfg_port, 1, 2)
+        self.layout.addWidget(self.data_port, 1, 3)
+        self.layout.addWidget(self.start_button, 2, 2)
+        self.layout.addWidget(self.stop_button, 2, 3)
+        self.layout.addWidget(self.camera_button, 3, 2, 1, 2)
+        self.layout.addWidget(self.log, 4, 2, 4, 2)
+
+        self.layout.addWidget(self.plot, 0, 0, 6, 1)
+        self.layout.addWidget(self.camera.viewfinder, 0, 1, 6, 1)
 
         # add to widget
         self.setLayout(self.layout)
-
-        self.sig.connect(self.plot.update_image)          
-
+        self.sig.connect(self.plot.update_image) 
+        self.plot.sig.connect(self.log_ml_output)      
 
     def start_callback(self):
         self.dataport = serial.Serial(port = self.data_port.currentText()[-5:-1], baudrate=921600)
@@ -251,9 +271,15 @@ class Main_Window(QWidget):
 
             self.sig.emit(buffer)
                 
-    def do_ml(self):
-        output = False 
-        self.log.append(str(output)) # log to output terminal
+    @Slot(int)
+    def log_ml_output(self,ml_out):
+        if ml_out == 1:
+            t = datetime.now()
+            current_time_h = t.hour
+            current_time_min = t.minute
+            current_time_s = t.second
+            current_time_ms = t.microsecond/1000
+            self.log.append("{0}:{1}:{2}:{3} is fall".format(current_time_h, current_time_min, current_time_s, current_time_ms))
 
 
 if __name__ == "__main__":
