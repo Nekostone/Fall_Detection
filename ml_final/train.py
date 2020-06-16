@@ -38,12 +38,13 @@ if __name__ == "__main__":
             # transpose each frame
             input_array[0]= np.moveaxis(input_array[0], 1, -1)
             input_array = remove_center(input_array, 31, 34)
-            input_array = feature_defs(input_array)
+            input_array = range_features_and_flatten_localnorm(input_array)
 
             # save array
             output_dir = os.path.join(pre_train_dir, "{0}.npy".format(count))
             np.save(output_dir, input_array, allow_pickle=True)
             print("{0} processed".format(count))
+            print("input_array[0].shape: {0}".format(input_array[0].shape))
 
             count += 1
 
@@ -51,23 +52,44 @@ if __name__ == "__main__":
         each_file_dir = os.path.join(vanilla_labelled_dir, each_file)
         input_array = np.load(each_file_dir, allow_pickle=True)
 
+        ########################
+        """
+        if input_array[1] == 1:
+            continue
+        if count >= 10:
+            print("done")
+            exit(0)
+        """
+
         # transpose each frame
         input_array[0]= np.moveaxis(input_array[0], 1, -1)
+
+        #######################
+        # np.save(os.path.join("/home/xubuntu/Desktop/temp", "{0}_undownsampled.npy".format(count)), input_array[0])
 
         # downsample_time 
         downsample_time_factor = 10
         output = downsample_time(input_array, downsample_time_factor)
 
         for each_downsampled_output in output:
-            each_downsampled_output = remove_center(each_downsampled_output)
+            # each_downsampled_output = remove_center(each_downsampled_output)
             each_downsampled_output = downsample_doppler(each_downsampled_output, 2)
-            each_downsampled_output = feature_defs(each_downsampled_output)
+            each_downsampled_output = remove_center(each_downsampled_output, 31, 34)
+
+            ########################
+            """
+            np.save(os.path.join("/home/xubuntu/Desktop/temp", "{0}.npy".format(count)), each_downsampled_output)
+            count += 1
+            break
+            """
+
+            each_downsampled_output = range_features_and_flatten_localnorm(each_downsampled_output)
 
             # save array
-            print("train: {0}".format(input_array.shape))
             each_downsampled_output_dir = os.path.join(pre_train_dir, "{0}.npy".format(count))
             np.save(each_downsampled_output_dir, each_downsampled_output, allow_pickle=True)
             print("{0} processed".format(count))
+            print("input_array[0].shape: {0}".format(each_downsampled_output[0].shape))
 
             count += 1
 
@@ -77,6 +99,7 @@ if __name__ == "__main__":
     train_percentage = 0.9
     fall_percentage = 0.5
     train_x, train_y, test_x, test_y = split_train_test(pre_train_dir, train_percentage, fall_percentage)
+    print("train_x.shape: {0}".format(train_x[0].shape))
     true_positive, true_negative, false_positive, false_negative = svm(train_x, train_y, test_x, test_y, weights_dir)
     print("true_positive: {0}, true_negative: {1}, false_positive: {2}, false_negative: {3}".format(true_positive, true_negative, false_positive, false_negative))
 
