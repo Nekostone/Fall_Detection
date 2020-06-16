@@ -10,7 +10,6 @@ from _downsample_time import downsample_time
 from _remove_center import remove_center
 from _svm import svm
 from _split_train_test import split_train_test
-from _feature_defs import feature_defs
 
 
 if __name__ == "__main__":
