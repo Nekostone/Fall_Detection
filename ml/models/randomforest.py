@@ -1,5 +1,6 @@
 import pandas as pd 
-import numpy as np 
+import numpy as np
+import time  
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import RandomForestRegressor
@@ -29,14 +30,17 @@ def randomforest(train_x, train_y, test_x, test_y):
     #print("Testing pickle")
     #rfc = pickle.load(open("/home/chongyicheng/Capstone/Fall_Detection/randomforest_iter2.sav", 'rb'))
     isFirst = True
+
+    start_time = time.time()
     for i in range(len(test_x)):
         predict = rfc.predict([test_x[i]])
+
         actual = test_y[i]
         if isFirst == True:
-            print("length for frames")
-            print(len(test_x[i]))
+            # print("length for frames")
+            # print(len(test_x[i]))
             isFirst = False
-
+        print("{}: {}".format(i,time.time()-start_time))
         """
         True Positive (TP) : Observation is positive, and is predicted to be positive.
         False Positive (FP) : Observation is negative, but is predicted positive.
@@ -44,21 +48,21 @@ def randomforest(train_x, train_y, test_x, test_y):
         False Negative (FN) : Observation is positive, but is predicted negative.
         """
 
-        if predict == actual:
-            if predict == 1:
-                true_positive += 1
-            elif predict == 0:
-                true_negative += 1
-            else:
-                print("??? - {0}".format(predict))
-        else:
-            if predict == 1:
-                false_positive += 1
-            elif predict == 0:
-                false_negative += 1
-            else:
-                print("??? - {0}".format(predict))
-
+        # if predict == actual:
+        #     if predict == 1:
+        #         true_positive += 1
+        #     elif predict == 0:
+        #         true_negative += 1
+        #     else:
+        #         print("??? - {0}".format(predict))
+        # else:
+        #     if predict == 1:
+        #         false_positive += 1
+        #     elif predict == 0:
+        #         false_negative += 1
+        #     else:
+        #         print("??? - {0}".format(predict))
+    # print("{}: {}".format(i,time.time()-start_time))
     # filename = 'randomforest_iter2.sav'
     # pickle.dump(rfc, open(os.path.join("/home/chongyicheng/Capstone/Fall_Detection",filename), 'wb'))
 

@@ -76,7 +76,7 @@ if __name__ == "__main__":
     #subprocess.call("rm -rf {0}".format(pre_train_dir), shell=True)
     # Random Forest
     print("Starting Random Forest Classification training and testing")
-    train_percentage = 0.7
+    train_percentage = 0.6
     train_x, train_y, test_x, test_y = split_train_test(pre_train_dir, train_percentage)
     true_positive, true_negative, false_positive, false_negative = randomforest(train_x, train_y, test_x, test_y)
     print("true_positive: {0}, true_negative: {1}, false_positive: {2}, false_negative: {3}".format(true_positive, true_negative, false_positive, false_negative))
