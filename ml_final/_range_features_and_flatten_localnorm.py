@@ -20,18 +20,18 @@ def range_features_and_flatten_localnorm(input_array: np.ndarray) -> np.ndarray:
     data = input_array[0]
     label = input_array[1]
 
-    # time_integrate_output = time_integrate(data)
-    # time_integrate_output = np.expand_dims(time_integrate_output, axis=0)
+    time_integrate_output = time_integrate(data)
+    time_integrate_output = np.expand_dims(time_integrate_output, axis=0)
 
     # retrieve features and flatten separately
-    # range_profile_output = range_profile(time_integrate_output)
+    range_profile_output = range_profile(time_integrate_output)
     range_profile_output = range_profile(data)
     mean = np.mean(range_profile_output)
     std = np.std(range_profile_output)
     range_profile_output = range_profile_output.flatten()
     range_profile_output = (range_profile_output - mean)/std
 
-    # dopp_profile_output = dopp_profile(time_integrate_output)
+    dopp_profile_output = dopp_profile(time_integrate_output)
     dopp_profile_output = dopp_profile(data)
     mean = np.mean(dopp_profile_output)
     std = np.std(dopp_profile_output)

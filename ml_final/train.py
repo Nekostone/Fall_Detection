@@ -14,8 +14,8 @@ from _split_train_test import split_train_test
 
 if __name__ == "__main__":
     vanilla_labelled_dir = "/home/xubuntu/Desktop/sensor_data/labelled_vanilla"
-    # tm_nonfall_dir0 = "/home/xubuntu/Desktop/sensor_data/tm_time10_doppler2_0"  # y-axis doppler, x-axis range, downsampled time by 10, downsampled doppler by 2
-    # tm_nonfall_dir1 = "/home/xubuntu/Desktop/sensor_data/tm_time10_doppler2_1"  # y-axis doppler, x-axis range, downsampled time by 10, downsampled doppler by 2
+    tm_nonfall_dir0 = "/home/xubuntu/Desktop/sensor_data/tm_time10_doppler2_0"  # y-axis doppler, x-axis range, downsampled time by 10, downsampled doppler by 2
+    tm_nonfall_dir1 = "/home/xubuntu/Desktop/sensor_data/tm_time10_doppler2_1"  # y-axis doppler, x-axis range, downsampled time by 10, downsampled doppler by 2
     pre_train_dir = "/home/xubuntu/Desktop/Fall_Detection/ml_final/temp"
     weights_dir = "/home/xubuntu/Desktop/Fall_Detection/ml_final/weights.pickle"
 
@@ -27,7 +27,6 @@ if __name__ == "__main__":
 
     # iterate for original data
     count = 0
-    """
     # iterate for special snowflake data
     for each_dir in [tm_nonfall_dir0, tm_nonfall_dir1]:
     # for each_dir in [tm_nonfall_dir0]:
@@ -47,7 +46,6 @@ if __name__ == "__main__":
             print("input_array[0].shape: {0}".format(input_array[0].shape))
 
             count += 1
-    """
 
     for each_file in os.listdir(vanilla_labelled_dir):
         each_file_dir = os.path.join(vanilla_labelled_dir, each_file)
@@ -61,7 +59,6 @@ if __name__ == "__main__":
         output = downsample_time(input_array, downsample_time_factor)
 
         for each_downsampled_output in output:
-            # each_downsampled_output = remove_center(each_downsampled_output)
             each_downsampled_output = downsample_doppler(each_downsampled_output, 2)
             each_downsampled_output = remove_center(each_downsampled_output, 31, 34)
             each_downsampled_output = range_features_and_flatten_localnorm(each_downsampled_output)
