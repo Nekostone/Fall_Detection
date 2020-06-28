@@ -1,3 +1,4 @@
+coverage==5.1
 cycler==0.10.0
 imageio==2.8.0
 joblib==0.14.1

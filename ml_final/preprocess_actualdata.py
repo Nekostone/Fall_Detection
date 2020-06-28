@@ -27,6 +27,6 @@ def preprocess(input_array):
     input_array = remove_center(input_array,32,35)
 
     # extract range features and normalize across all elements in one recording
-    input_array = feature_defs(input_array)
+    input_array = range_features_and_flatten_localnorm(input_array)
 
     return [input_array[0]]
