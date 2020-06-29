@@ -1,16 +1,45 @@
-#Following tutorial to send and receive JSON over MQTT with Python
+import paho.mqtt.client as mqtt
+import time
 
-import json
+def on_log(client, userdata, level, buf):
+    print("log: ", buf)
 
-# #brokers
-# brokers_out = {"broker1":"192.168.1.206",
-#                 "broker2":"test.mosquitto.org",
-#                 "broker3":"iot.eclipse.org"}
+def on_connect(client, userdata, flags, rc):
+    if rc == 0:
+        print ("Connection OK!")
+    else:
+        print("Bad connection, Returned Code: ", rc)
 
-# #encode python dictionary or list
-# data_out = json.dumps(brokers_out)
-# data_in = data_out
+def on_disconnect(client, userdata, flags, rc=0):
+    print("Disconnected result code " + str(rc))
 
-# brokers_in = json_loads(data_in)
-# #Convert from JSON to python 
-# m_in = json.loads(m_decode)
+def on_message(client,userdata, msg):
+    topic=msg.topic
+    m_decode=str(msg.payload.decode("utf-8","ignore"))
+    print("message received! =>", m_decode)
+
+#broker="broker.hivemq.com"
+broker="39.109.217.93"
+#port = 1883
+port = 1884
+#qos = 2
+client = mqtt.Client("nyaastone1")
+client.on_connect=on_connect
+client.on_disconnect=on_disconnect
+#client.on_log=on_log
+client.on_message=on_message
+print ("connecting to broker, ", broker)
+client.connect(broker, port)
+
+client.loop_start()
+start_time = time.asctime()
+print("I've connected, now sleeping")
+client.subscribe("haus/sensorz1")
+print("subscribed!")
+client.publish("haus/sensorz1", "mai_first_message, sent on " + start_time)
+client.publish("haus/sensorz1", "testing stuff, this is payload", qos=1) #testing QoS
+print("published!")
+time.sleep(20)
+print("wakey wakey")
+client.loop_stop()
+#client.disconnect()
