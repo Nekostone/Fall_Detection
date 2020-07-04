@@ -13,15 +13,15 @@ from _split_train_test import split_train_test
 
 
 if __name__ == "__main__":
-    vanilla_labelled_dir = "/home/xubuntu/Desktop/sensor_data/labelled_vanilla"
-    tm_nonfall_dir0 = "/home/xubuntu/Desktop/sensor_data/tm_time10_doppler2_0"  # y-axis doppler, x-axis range, downsampled time by 10, downsampled doppler by 2
-    tm_nonfall_dir1 = "/home/xubuntu/Desktop/sensor_data/tm_time10_doppler2_1"  # y-axis doppler, x-axis range, downsampled time by 10, downsampled doppler by 2
-    pre_train_dir = "/home/xubuntu/Desktop/Fall_Detection/ml_final/temp"
-    weights_dir = "/home/xubuntu/Desktop/Fall_Detection/ml_final/weights.pickle"
+    vanilla_labelled_dir = r"D:\Documents\SUTD\Capstone\Ml_Data\labelled_vanilla\labelled_vanilla"
+    tm_nonfall_dir0 = r"D:\Documents\SUTD\Capstone\Ml_Data\tm_time10_doppler2_0\tm_time10_doppler2_0"  # y-axis doppler, x-axis range, downsampled time by 10, downsampled doppler by 2
+    tm_nonfall_dir1 = r"D:\Documents\SUTD\Capstone\Ml_Data\tm_time10_doppler2_1\tm_time10_doppler2_1"  # y-axis doppler, x-axis range, downsampled time by 10, downsampled doppler by 2
+    pre_train_dir = r"D:\Documents\SUTD\Capstone\Ml_Data\temp"
+    weights_dir = r"D:\Documents\SUTD\Capstone\Ml_Data\weights.pickle"
 
     # recreate temp folder
     if os.path.exists(pre_train_dir):
-        subprocess.call("rm -rf {0}".format(pre_train_dir), shell=True)
+        subprocess.call("rd -r {0}".format(pre_train_dir), shell=True)
         print("ERROR - folder {0} already exist. Deleting old folder...".format(pre_train_dir))
     os.mkdir(pre_train_dir)
 
@@ -79,7 +79,8 @@ if __name__ == "__main__":
     train_x, train_y, test_x, test_y = split_train_test(pre_train_dir, train_percentage, fall_percentage)
     print("train_x.shape: {0}".format(train_x[0].shape))
     true_positive, true_negative, false_positive, false_negative = svm(train_x, train_y, test_x, test_y, weights_dir)
-    print("true_positive: {0}, true_negative: {1}, false_positive: {2}, false_negative: {3}".format(true_positive, true_negative, false_positive, false_negative))
+    acc = (true_negative + true_positive)/(true_negative + true_positive + false_negative + false_positive)
+    print("true_positive: {0}, true_negative: {1}, false_positive: {2}, false_negative: {3}, accuracy: {4}".format(true_positive, true_negative, false_positive, false_negative, acc))
 
     # cleanup
-    subprocess.call("rm -rf {0}".format(pre_train_dir), shell=True)
+    subprocess.call("rd -r {0}".format(pre_train_dir), shell=True)

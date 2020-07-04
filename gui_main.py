@@ -16,7 +16,7 @@ from serial.tools import list_ports
 # Pyside2 imports
 from PySide2.QtWidgets import QWidget, QPushButton, QComboBox, QGridLayout, QApplication, QLabel, QTextEdit
 from PySide2.QtGui import QPixmap, QImage, QFont, QColor
-from PySide2.QtCore import QRunnable, Signal, Slot, QThreadPool
+from PySide2.QtCore import QRunnable, Signal, impSlot, QThreadPool
 from PySide2.QtMultimedia import QCamera, QCameraInfo, QCameraViewfinderSettings
 from PySide2.QtMultimediaWidgets import QCameraViewfinder
 
@@ -26,8 +26,8 @@ sys.path.append(r"D:\Documents\SUTD\Capstone\Fall_Detection\ml_final")
 from ml_final.preprocess_actualdata import preprocess  # * <- leik dis wan
 
 cfg_file = r"D:\Downloads\Telegram Desktop\profile_heat_map.cfg" 
-svm_weights = r"D:\Downloads\Telegram Desktop\weights (6).pickle"
-output_folder = r"D:\Documents\SUTD\Capstone\Data"
+svm_weights = r"D:\Documents\SUTD\Capstone\Ml_Data\range_rangeDelta_doppDelta_94.pickle"
+output_folder = r"D:\Documents\SUTD\Capstone\Tests\Live"
 
 class COM_Ports(QComboBox):
     def __init__(self):
@@ -83,53 +83,78 @@ class Radar_Plot(QLabel):
         self.setPixmap(QPixmap(self.img).scaled(640,640)) 
         self.setMargin(40)
 
-        self.counter = 4
+        self.counter = 19 # 20 frames total : 5 frames test + 15 frames for check
         self.centroid = None
-        #self.counter2 = 0 # for data purposes
         self.ml_frames = []
+        self.frame_energies = []
+        self.energy_threshold = 100
 
         # load svm model weights
         with open(svm_weights, "rb") as readfile:
             self.model = pickle.loads(readfile.read())
 
+    def cfar(self,arr):
+        # one side
+        train = 5
+        guard = 3
+        p = 1.4
+
+        train_size = 2*(train + guard) + 1
+        guard_size = 2* guard +1
+
+        output_arr = np.zeros((128,64))
+        arr =np.pad(arr,train_size+guard_size,mode="mean")
+
+        for row in range(128):
+            for col in range(64):
+                test_cells = arr[row:row+train_size, col:col+train_size]
+                guard_cells = arr[row+train: row + train_size-train, col+train:col+train_size-train]
+
+                ave_noise = (np.sum(test_cells) - np.sum(guard_cells))/(train_size**2 - guard_size**2)
+                cut = arr[row+train_size+guard_size, col+train_size+guard_size]
+
+                if cut > ave_noise * p:
+                    output_arr[row,col] = cut
+
+        return output_arr
+
     def parse_complete_frame(self, frame_string): # takes a byte string containing the whole frame excluding magic word
         frame = frame_string[36:-20] # extract frame data
         data_arr = [int.from_bytes(frame[i:i+2], byteorder = "little", signed = False) for i in range(0, len(frame), 2)] # convert to int
-        data_arr = np.asarray(data_arr).reshape((256,64))[0:128]
-
-        # get range doppler (TI mmwave demo algo)
-        #data_arr = np.add(data_arr[0::2,] , data_arr[1::2,] * 256)
+        data_arr = np.asarray(data_arr).reshape((256,64))[0:128]/512 # data is in q9 format, so have to divide by 2**9 = 512 to get true value
 
         # fftshift
         data_arr = np.concatenate((data_arr[:,32:64],data_arr[:,0:32]), axis=1)
-        #data_arr = np.where(data_arr == 0, 0.001, data_arr)
-        #data_arr = np.log10(data_arr)
+
+        #cfar
+        data_arr = self.cfar(data_arr)
+        data_arr[:,31:34] = 0 # remove centre here because energy computation requires center to be removed
+
+        # for recording raw data
+        # self.ml_frames.append(data_arr)
+        # self.sig.emit(len(self.ml_frames))
 
         # Store frames, yes it's not memory efficient but heck lmao
         if len(self.ml_frames) < self.counter:
             self.ml_frames.append(data_arr)
+            self.frame_energies.append(np.sum(data_arr))
         
         # send for svm
         else:
             self.ml_frames.append(data_arr)
 
-            #For saving data 
-            # d = np.asarray(self.ml_frames)
-            # d = np.moveaxis(d, 1,-1)
-            # print(d.shape)
-            # if self.counter2 < 100:
-            #     print(self.counter2)
-            #     output_path = output_folder + r"\tm_nonfall{}.npy".format(self.counter2)
-            #     np.save(output_path, d)
-            #     self.counter2 += 1
-            # self.ml_frames = []
-
             # svm code here
-            preprocessed = preprocess(self.ml_frames)
+            preprocessed = preprocess(self.ml_frames[0:5])
             output = self.model.predict(preprocessed)
-            self.sig.emit(output[0]) # pass to main app
 
+            # perform second level check to eliminate false positives based on energy levels post fall
+            if output == 1:
+                if np.sum(self.frame_energies[5:20])/15 >= self.energy_threshold:
+                    output = 0
+
+            self.sig.emit(output[0]) # pass to main app
             self.ml_frames.pop(0)   #remove oldest frame
+            self.frame_energies.pop(0)
 
 
         # plot
@@ -253,6 +278,11 @@ class Main_Window(QWidget):
         except:
             self.log.append("Invalid port")
 
+        # data recording purposes
+        # date = time.strftime("%a_%d_%b_%Y_%H_%M_%S", time.localtime())
+        # np.save(output_folder + "\\" + date+".npy",self.plot.ml_frames, allow_pickle=True)
+        # self.log.append("Saved")
+
     def get_serial_data(self):
         magic_word = b'\x02\x01\x04\x03\x06\x05\x08\x07'
         self.stop = 0
@@ -280,6 +310,7 @@ class Main_Window(QWidget):
             current_time_s = t.second
             current_time_ms = t.microsecond/1000
             self.log.append("{0}:{1}:{2}:{3} is fall".format(current_time_h, current_time_min, current_time_s, current_time_ms))
+       # self.log.append("Frame: {}".format(ml_out))
 
 
 if __name__ == "__main__":
