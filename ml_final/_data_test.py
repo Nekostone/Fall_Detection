@@ -4,6 +4,7 @@ import numpy as np
 import pickle
 from preprocess_actualdata import preprocess
 from _remove_center import remove_center
+import time
 
 test_file = r"D:\Documents\SUTD\Capstone\Tests\Live\Sat_04_Jul_2020_08_43_08.npy"
 recorded_file = r"D:\Documents\SUTD\Capstone\Tests\Live\Sat_04_Jul_2020_08_43_08_vals.npy"
@@ -41,6 +42,8 @@ with open(svm_weights, "rb") as readfile:
     model = pickle.loads(readfile.read())
 
 # Load test file and recorded file 
+
+start = time.time()
 test_data = np.load(test_file, allow_pickle=True)/512
 actual = np.load(recorded_file, allow_pickle=True)
 
@@ -82,7 +85,7 @@ for i in range(len(test_data)-size):
     current_test_data = test_data[i:i+5]
     preprocessed = preprocess(current_test_data)
     output = model.predict(preprocessed)
-    results.append(output)
+    # results.append(output)
 
     if output == 1:
         look_ahead = energy[i+5:i+size]
@@ -94,24 +97,22 @@ for i in range(len(test_data)-size):
     else:
         results2.append(output)
 
-print(len(results))
-
 # compile results
-for idx in range(len(results)):
-    if actual[idx] == 1 and results[idx] == 1:
-        true_pos += 1
-        frames_true_pos.append(idx)
+# for idx in range(len(results)):
+#     if actual[idx] == 1 and results[idx] == 1:
+#         true_pos += 1
+#         frames_true_pos.append(idx)
     
-    elif actual[idx] == 0 and results[idx] == 1:
-        false_pos += 1
-        frames_false_pos.append(idx)
+#     elif actual[idx] == 0 and results[idx] == 1:
+#         false_pos += 1
+#         frames_false_pos.append(idx)
 
-    elif actual[idx] == 0 and results[idx] == 0:
-        true_neg += 1
+#     elif actual[idx] == 0 and results[idx] == 0:
+#         true_neg += 1
 
-    elif actual[idx] == 1 and results[idx] == 0:
-        false_neg += 1
-        frames_false_neg.append(idx)
+#     elif actual[idx] == 1 and results[idx] == 0:
+#         false_neg += 1
+#         frames_false_neg.append(idx)
 
 for idx in range(len(results2)):
     if actual[idx] == 1 and results2[idx] == 1:
@@ -127,9 +128,13 @@ for idx in range(len(results2)):
     elif actual[idx] == 1 and results2[idx] == 0:
         false_neg2 += 1
 
-acc = (true_neg + true_pos)/(true_pos + true_neg + false_neg + false_pos)
+end = time.time()
+ave = (end-start)/len(results2)
+
+# acc = (true_neg + true_pos)/(true_pos + true_neg + false_neg + false_pos)
 acc2 = (true_neg2 + true_pos2)/(true_pos2 + true_neg2 + false_neg2 + false_pos2)
-print("Before: True positive:{0}, True negative:{1}, False positive:{2}, False negative:{3}, Accuracy:{4}".format(true_pos, true_neg, false_pos, false_neg, acc))
-print("True positives: {}".format(frames_true_pos))
+# print("Before: True positive:{0}, True negative:{1}, False positive:{2}, False negative:{3}, Accuracy:{4}".format(true_pos, true_neg, false_pos, false_neg, acc))
+# print("True positives: {}".format(frames_true_pos))
 print("After: True positive:{0}, True negative:{1}, False positive:{2}, False negative:{3}, Accuracy:{4}".format(true_pos2, true_neg2, false_pos2, false_neg2, acc2))
 print("After: False positives: {}".format(frames_false_pos2))
+print("Average time per frame: {}".format(ave))
