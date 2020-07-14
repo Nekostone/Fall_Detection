@@ -18,6 +18,7 @@ if __name__ == "__main__":
     tm_nonfall_dir1 = r"D:\Documents\SUTD\Capstone\Ml_Data\tm_time10_doppler2_1\tm_time10_doppler2_1"  # y-axis doppler, x-axis range, downsampled time by 10, downsampled doppler by 2
     pre_train_dir = r"D:\Documents\SUTD\Capstone\Ml_Data\temp"
     weights_dir = r"D:\Documents\SUTD\Capstone\Ml_Data\weights.pickle"
+    pca_dir = r"D:\Documents\SUTD\Capstone\Ml_Data\pca_weights.pickle"
 
     # recreate temp folder
     if os.path.exists(pre_train_dir):

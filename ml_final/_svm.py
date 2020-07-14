@@ -1,9 +1,21 @@
 from sklearn import svm as svm_model
+from sklearn.decomposition import PCA
 import time
 import numpy as np
 import pickle
 
 def svm(train_x, train_y, test_x, test_y, weights_dir):
+    pca = PCA(0.85)
+    pca.fit(train_x)
+    print("Number of principal components: {}".format(pca.n_components_))
+
+    pca_bytes = pickle.dumps(pca)
+    with open(r"D:\Documents\SUTD\Capstone\Ml_Data\pca_weights.pickle", "wb+") as writefile0:
+        writefile0.write(pca_bytes)
+
+    train_x = pca.transform(train_x)
+    test_x = pca.transform(test_x)
+
     model = svm_model.SVC()
     model.fit(train_x, train_y)
 

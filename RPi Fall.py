@@ -7,6 +7,7 @@ import time
 import sys
 
 from multiprocessing import Queue, Process
+from scipy.signal import convolve
 
 # files
 cfg_file = r"D:\Documents\SUTD\Capstone\Fall_Detection\profile_heat_map.cfg"
@@ -94,22 +95,19 @@ class Fall_Detector():
 
         train_size = 2*(train + guard) + 1
         guard_size = 2* guard +1
+        arr2 = np.pad(arr,train + guard,mode="mean")
 
-        output_arr = np.zeros((128,64))
-        arr =np.pad(arr,train_size+guard_size,mode="mean")
+        # build kernel
+        kernel = np.zeros((7,7))
+        kernel = np.pad(kernel, 5, constant_values = 1)
 
-        for row in range(128):
-            for col in range(64):
-                test_cells = arr[row:row+train_size, col:col+train_size]
-                guard_cells = arr[row+train: row + train_size-train, col+train:col+train_size-train]
+        # perform cfar operation
+        ave_noise = convolve(arr2, kernel, mode="same")[train+guard : train+guard+128, train+guard: train+guard+64] /(train_size**2 - guard_size**2)
+        
+        truth = np.greater_equal(arr, p* ave_noise)
+        output = np.where(truth, arr, 0)
 
-                ave_noise = (np.sum(test_cells) - np.sum(guard_cells))/(train_size**2 - guard_size**2)
-                cut = arr[row+train_size+guard_size, col+train_size+guard_size]
-
-                if cut > ave_noise * p:
-                    output_arr[row,col] = cut
-
-        return output_arr
+        return output
 
     def process_data(self):
         while True:
