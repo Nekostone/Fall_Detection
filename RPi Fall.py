@@ -126,6 +126,7 @@ class Fall_Detector():
                     self.data_buffer = serial_list[2]
 
     def parse_complete_frame(self, frame_string): # takes a byte string containing the whole frame excluding magic word
+        ping = time.time()
         frame = frame_string[36:-20] # extract frame data
         data_arr = [int.from_bytes(frame[i:i+2], byteorder = "little", signed = False) for i in range(0, len(frame), 2)] # convert to int
         data_arr = np.asarray(data_arr).reshape((256,64))[0:128]/512 # data is in q9 format, so have to divide by 2**9 = 512 to get true value
@@ -156,7 +157,8 @@ class Fall_Detector():
                 if np.sum(self.frame_energies[5:20])/15 >= self.energy_threshold:
                     output = 0
 
-            print("Current output: {}".format(output))
+            pong = time.time()
+            print("Current output: {0} in {1}s".format(output, pong - ping))
             self.ml_frames.pop(0)   #remove oldest frame
             self.frame_energies.pop(0)
 
