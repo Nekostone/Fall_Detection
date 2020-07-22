@@ -4,19 +4,43 @@ import serial
 import numpy as np
 import pickle
 import time
+import datetime
 import sys
 
 from multiprocessing import Queue, Process
 from scipy.signal import convolve
 
-# files
-cfg_file = r"D:\Documents\SUTD\Capstone\Fall_Detection\profile_heat_map.cfg"
-svm_weights = r"D:\Documents\SUTD\Capstone\Ml_Data\range_rangeDelta_doppDelta_94.pickle"
+env = "junde"
 
-#Change all paths to your own when using this
-# SVM preprocessing and feature extractoin layers
-sys.path.append(r"D:\Documents\SUTD\Capstone\Fall_Detection\ml_final")
-from ml_final.preprocess_actualdata import preprocess  # * <- leik dis wan
+if env == "tm":
+    # files
+    cfg_file = r"D:\Documents\SUTD\Capstone\Fall_Detection\profile_heat_map.cfg"
+    svm_weights = r"D:\Documents\SUTD\Capstone\Ml_Data\range_rangeDelta_doppDelta_94.pickle"
+
+    #Change all paths to your own when using this
+    # SVM preprocessing and feature extractoin layers
+    sys.path.append(r"D:\Documents\SUTD\Capstone\Fall_Detection\ml_final")
+    from ml_final.preprocess_actualdata import preprocess  # * <- leik dis wan
+
+    dataport_dir = "COM4"
+    cfgport_dir = "COM5"
+elif env == "junde":
+    # files
+    cfg_file = "/home/pi/Desktop/Fall_Detection/profile_heat_map.cfg"
+    svm_weights = "/home/pi/Downloads/range_rangeDelta_doppDelta_94.pickle"
+
+    #Change all paths to your own when using this
+    # SVM preprocessing and feature extractoin layers
+    sys.path.append("/home/pi/Desktop/Fall_Detection/ml_final")
+    from ml_final.preprocess_actualdata import preprocess  # * <- leik dis wan
+
+    dataport_dir = "/dev/ttyACM1"
+    cfgport_dir = "/dev/ttyACM0"
+
+
+
+start_script_time = datetime.datetime.now()
+false_positive_count = 0
 
 class Serial_Reader():
     def __init__(self, q):
@@ -29,8 +53,8 @@ class Serial_Reader():
         self.cfgport = None
 
     def connect_serial(self):
-        self.dataport = serial.Serial(port = "COM4", baudrate=921600)
-        self.cfgport = serial.Serial(port= "COM5", baudrate=115200)
+        self.dataport = serial.Serial(port = dataport_dir, baudrate=921600)
+        self.cfgport = serial.Serial(port= cfgport_dir, baudrate=115200)
 
         print("Connecting to data port: {}".format(self.dataport))
         print("Connecting to config port: {}".format(self.cfgport))
@@ -59,13 +83,14 @@ class Serial_Reader():
                 waiting = self.dataport.in_waiting
                 buffer.append(self.dataport.read(waiting))
                 byte_counter += waiting
-                time.sleep(0.1)
+                # time.sleep(0.1)
 
             buffer = b''.join(buffer)   # combines into a single byte string
             buffer = buffer.split(magic_word) # splits into packets based on magic word at start of header
             if len(buffer) < 4:
                 self.queue.put(buffer) # buffer is a list with min length 2, max length 3
-                print("Sent frame")
+                # print("Sent frame")
+                print("Sent frame. start_script_time: {0}, false_positive_count: {1}".format(start_script_time, false_positive_count))
             
 
 class Fall_Detector():
@@ -156,6 +181,8 @@ class Fall_Detector():
             if output == 1:
                 if np.sum(self.frame_energies[5:20])/15 >= self.energy_threshold:
                     output = 0
+
+                false_positive_count += 1
 
             pong = time.time()
             print("Current output: {0} in {1}s".format(output, pong - ping))
