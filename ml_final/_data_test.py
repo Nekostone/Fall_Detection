@@ -7,10 +7,17 @@ from _remove_center import remove_center
 import time
 from scipy.signal import convolve
 
+"""
 test_file = r"D:\Documents\SUTD\Capstone\Tests\Live\Sat_04_Jul_2020_08_43_08.npy"
 recorded_file = r"D:\Documents\SUTD\Capstone\Tests\Live\Sat_04_Jul_2020_08_43_08_vals.npy"
 svm_weights = r"D:\Documents\SUTD\Capstone\Fall_Detection\range_rangeDelta_doppDelta_94.pickle"
 pca_weights = r"D:\Documents\SUTD\Capstone\Ml_Data\pca_weights.pickle"
+"""
+
+test_file = "/home/pi/Desktop/Sat_04_Jul_2020_08_43_08.npy"
+recorded_file = "/home/pi/Desktop/Sat_04_Jul_2020_08_43_08_vals.npy"
+svm_weights = "/home/pi/Downloads/range_rangeDelta_doppDelta_94.pickle"
+pca_weights = None
 
 
 def fft_cfar(arr):
@@ -66,8 +73,10 @@ def cfar(arr, start_row_idx = 0, end_row_idx = 128):
 with open(svm_weights, "rb") as readfile:
     model = pickle.loads(readfile.read())
 
+"""
 with open(pca_weights, "rb") as readfile2:
     pca = pickle.loads(readfile2.read())
+"""
 
 # Load test file and recorded file 
 test_data = np.load(test_file, allow_pickle=True)/512
@@ -100,7 +109,7 @@ start = time.time()
 
 print("Computing CFAR...")
 ping1 = time.time()
-test_data = [cfar(i) for i in test_data]
+test_data = [fft_cfar(i) for i in test_data]
 for i in test_data:
     i[:,31:34] = 0
 pong1 = time.time()
