@@ -8,26 +8,26 @@ import numpy as np
 import scipy as sp
 import serial
 import time
-from datetime import datetime
+import datetime
 import pickle
+from scipy.signal import convolve
 
 from serial.tools import list_ports
 
 # Pyside2 imports
 from PySide2.QtWidgets import QWidget, QPushButton, QComboBox, QGridLayout, QApplication, QLabel, QTextEdit
 from PySide2.QtGui import QPixmap, QImage, QFont, QColor
-from PySide2.QtCore import QRunnable, Signal, impSlot, QThreadPool
+from PySide2.QtCore import QRunnable, Signal, Slot, QThreadPool, QSize
 from PySide2.QtMultimedia import QCamera, QCameraInfo, QCameraViewfinderSettings
 from PySide2.QtMultimediaWidgets import QCameraViewfinder
 
 #Change all paths to your own when using this
 # SVM preprocessing and feature extractoin layers
-sys.path.append(r"D:\Documents\SUTD\Capstone\Fall_Detection\ml_final")
-from ml_final.preprocess_actualdata import preprocess  # * <- leik dis wan
 
-cfg_file = r"D:\Downloads\Telegram Desktop\profile_heat_map.cfg" 
-svm_weights = r"D:\Documents\SUTD\Capstone\Ml_Data\range_rangeDelta_doppDelta_94.pickle"
-output_folder = r"D:\Documents\SUTD\Capstone\Tests\Live"
+cfg_file = "/home/pi/Desktop/Fall_Detection/profile_heat_map.cfg"
+svm_weights = "/home/pi/Desktop/Fall_Detection/range_rangeDelta_doppDelta_94.pickle"
+sys.path.append("/home/pi/Desktop/Fall_Detection/ml_final")
+from ml_final.preprocess_actualdata import preprocess  # * <- leik dis wan
 
 class COM_Ports(QComboBox):
     def __init__(self):
@@ -78,16 +78,17 @@ class Radar_Plot(QLabel):
     def __init__(self):
         super().__init__()
         self.data_buffer = None
-        self.data = np.zeros((128,64), np.uint16)
-        self.img = QImage(self.data, 128, 64, QImage.Format_Grayscale16)
-        self.setPixmap(QPixmap(self.img).scaled(640,640)) 
+        self.data = np.zeros((128,64), np.uint8)
+        self.img = QImage(self.data, 128, 64, QImage.Format_Grayscale8)
+        self.setPixmap(QPixmap(self.img).scaled(QSize(384,384))) 
         self.setMargin(40)
 
-        self.counter = 19 # 20 frames total : 5 frames test + 15 frames for check
         self.centroid = None
         self.ml_frames = []
         self.frame_energies = []
         self.energy_threshold = 100
+        self.segment_length = 20
+        self.ml_length = 5
 
         # load svm model weights
         with open(svm_weights, "rb") as readfile:
@@ -101,24 +102,23 @@ class Radar_Plot(QLabel):
 
         train_size = 2*(train + guard) + 1
         guard_size = 2* guard +1
+        arr2 = np.pad(arr,train + guard,mode="mean")
 
-        output_arr = np.zeros((128,64))
-        arr =np.pad(arr,train_size+guard_size,mode="mean")
+        # build kernel
+        kernel = np.zeros((7,7))
+        kernel = np.pad(kernel, 5, constant_values = 1)
 
-        for row in range(128):
-            for col in range(64):
-                test_cells = arr[row:row+train_size, col:col+train_size]
-                guard_cells = arr[row+train: row + train_size-train, col+train:col+train_size-train]
+        # perform cfar operation
+        ave_noise = convolve(arr2, kernel, mode="same")[train+guard : train+guard+128, train+guard: train+guard+64] /(train_size**2 - guard_size**2)
+        
+        truth = np.greater_equal(arr, p* ave_noise)
+        output = np.where(truth, arr, 0)
 
-                ave_noise = (np.sum(test_cells) - np.sum(guard_cells))/(train_size**2 - guard_size**2)
-                cut = arr[row+train_size+guard_size, col+train_size+guard_size]
-
-                if cut > ave_noise * p:
-                    output_arr[row,col] = cut
-
-        return output_arr
+        return output
 
     def parse_complete_frame(self, frame_string): # takes a byte string containing the whole frame excluding magic word
+        # print("self.total_frames: {0}, self.false_positive_count: {1}".format(self.total_frames, self.false_positive_count))
+        ping = time.time()
         frame = frame_string[36:-20] # extract frame data
         data_arr = [int.from_bytes(frame[i:i+2], byteorder = "little", signed = False) for i in range(0, len(frame), 2)] # convert to int
         data_arr = np.asarray(data_arr).reshape((256,64))[0:128]/512 # data is in q9 format, so have to divide by 2**9 = 512 to get true value
@@ -130,21 +130,18 @@ class Radar_Plot(QLabel):
         data_arr = self.cfar(data_arr)
         data_arr[:,31:34] = 0 # remove centre here because energy computation requires center to be removed
 
-        # for recording raw data
-        # self.ml_frames.append(data_arr)
-        # self.sig.emit(len(self.ml_frames))
-
         # Store frames, yes it's not memory efficient but heck lmao
-        if len(self.ml_frames) < self.counter:
+        if len(self.ml_frames) < self.segment_length:
             self.ml_frames.append(data_arr)
             self.frame_energies.append(np.sum(data_arr))
         
         # send for svm
         else:
             self.ml_frames.append(data_arr)
+            self.frame_energies.append(np.sum(data_arr))
 
             # svm code here
-            preprocessed = preprocess(self.ml_frames[0:5])
+            preprocessed = preprocess(self.ml_frames[0:self.ml_length])
             output = self.model.predict(preprocessed)
 
             # perform second level check to eliminate false positives based on energy levels post fall
@@ -152,18 +149,25 @@ class Radar_Plot(QLabel):
                 if np.sum(self.frame_energies[5:20])/15 >= self.energy_threshold:
                     output = 0
 
-            self.sig.emit(output[0]) # pass to main app
+                # self.false_positive_count += 1
+
+            pong = time.time()
+            print("Current output: {0} in {1}s".format(output, pong - ping))
             self.ml_frames.pop(0)   #remove oldest frame
             self.frame_energies.pop(0)
-
-
+            
         # plot
-        #data_arr = data_arr - np.min(data_arr) #invert colors 
-        data_arr = (data_arr - np.min(data_arr))/(np.max(data_arr) - np.min(data_arr))
-        data_arr = (255* data_arr).astype(np.uint8)
+        data_min = np.min(data_arr)
+        data_max = np.max(data_arr)
+        
+        if data_max == 0:
+            data_max = 1
+        
+        data_arr = 255 -255 * (data_arr - data_min)/data_max
+        data_arr = data_arr.astype(np.uint8) 
         self.data = data_arr
         self.img = QImage(self.data, 64, 128, QImage.Format_Grayscale8)
-        self.setPixmap(QPixmap(self.img).scaled(640 ,640))
+        self.setPixmap(QPixmap(self.img).scaled(QSize(384,384)))
         self.repaint()
 
 
@@ -195,7 +199,6 @@ class Main_Window(QWidget):
     sig = Signal(list)
     def __init__(self):
         super().__init__()
-        self.available_cams = QCameraInfo.availableCameras()
         self.dataport = None
         self.cfgport = None
         self.stop = 0
@@ -204,18 +207,15 @@ class Main_Window(QWidget):
         self.threadpool = QThreadPool()
 
         self.layout = QGridLayout()
-        self.setFixedSize(1920,960)
+        self.setFixedSize(1024,768)
 
         #declare widgets
-        self.camera = Webcam(self.available_cams[0])
-
         self.cfg_port = COM_Ports()
         self.data_port = COM_Ports()
         self.plot = Radar_Plot() 
         self.log = Logging_Window()
         self.start_button = QPushButton("Start")
         self.stop_button = QPushButton("Stop")
-        self.camera_button = QPushButton("Toggle Camera")
 
         # declare and set up labels
         self.cfg_label = QLabel("Config")
@@ -226,7 +226,6 @@ class Main_Window(QWidget):
         #set button callbacks
         self.start_button.clicked.connect(self.start_callback)
         self.stop_button.clicked.connect(self.stop_callback)
-        self.camera_button.clicked.connect(self.camera.switch)
 
         #insert widgets to layout
         self.layout.addWidget(self.cfg_label, 0, 2)
@@ -235,11 +234,9 @@ class Main_Window(QWidget):
         self.layout.addWidget(self.data_port, 1, 3)
         self.layout.addWidget(self.start_button, 2, 2)
         self.layout.addWidget(self.stop_button, 2, 3)
-        self.layout.addWidget(self.camera_button, 3, 2, 1, 2)
         self.layout.addWidget(self.log, 4, 2, 4, 2)
 
         self.layout.addWidget(self.plot, 0, 0, 6, 1)
-        self.layout.addWidget(self.camera.viewfinder, 0, 1, 6, 1)
 
         # add to widget
         self.setLayout(self.layout)
@@ -247,8 +244,8 @@ class Main_Window(QWidget):
         self.plot.sig.connect(self.log_ml_output)      
 
     def start_callback(self):
-        self.dataport = serial.Serial(port = self.data_port.currentText()[-5:-1], baudrate=921600)
-        self.cfgport = serial.Serial(port= self.cfg_port.currentText()[-5:-1], baudrate=115200)
+        self.dataport = serial.Serial(port = "/dev/ttyACM1", baudrate=921600)
+        self.cfgport = serial.Serial(port= "/dev/ttyACM0", baudrate=115200)
 
         self.log.append("Data port:" + self.data_port.currentText()[-5:-1] + "baudrate: 921600")
         self.log.append("Cfg port:" + self.cfg_port.currentText()[-5:-1] + "baudrate: 115200")
@@ -294,7 +291,6 @@ class Main_Window(QWidget):
                 waiting = self.dataport.in_waiting
                 buffer.append(self.dataport.read(waiting))
                 byte_counter += waiting
-                time.sleep(0.05)
 
             buffer = b''.join(buffer)   # combines into a single byte string
             buffer = buffer.split(magic_word) # splits into packets based on magic word at start of header
