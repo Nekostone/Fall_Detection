@@ -23,10 +23,14 @@ from PySide2.QtMultimediaWidgets import QCameraViewfinder
 
 #Change all paths to your own when using this
 # SVM preprocessing and feature extractoin layers
-
+"""
 cfg_file = "/home/pi/Desktop/Fall_Detection/profile_heat_map.cfg"
 svm_weights = "/home/pi/Desktop/Fall_Detection/range_rangeDelta_doppDelta_94.pickle"
 sys.path.append("/home/pi/Desktop/Fall_Detection/ml_final")
+"""
+cfg_file = "/home/xubuntu/Desktop/capstone/Fall_Detection/profile_heat_map.cfg"
+svm_weights = "/home/xubuntu/Desktop/capstone/Fall_Detection/range_rangeDelta_doppDelta_94.pickle"
+sys.path.append("/home/xubuntu/Desktop/capstone/Fall_Detection/ml_final")
 from ml_final.preprocess_actualdata import preprocess  # * <- leik dis wan
 
 class COM_Ports(QComboBox):
