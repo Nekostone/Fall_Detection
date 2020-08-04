@@ -34,6 +34,7 @@ import os
 current_dir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.join(current_dir, "ml_final"))
 from ml_final.preprocess_actualdata import preprocess  # * <- leik dis wan
+from scipy.signal import convolve
 
 cfg_file = os.path.join(current_dir, "profile_heat_map.cfg")
 svm_weights = os.path.join(current_dir, "range_rangeDelta_doppDelta_94.pickle")
@@ -102,6 +103,7 @@ class Radar_Plot(QLabel):
         with open(svm_weights, "rb") as readfile:
             self.model = pickle.loads(readfile.read())
 
+    """
     def cfar(self,arr):
         # one side
         train = 5
@@ -126,6 +128,31 @@ class Radar_Plot(QLabel):
                     output_arr[row,col] = cut
 
         return output_arr
+    """
+
+    def cfar(self,arr):
+        # one side
+        train = 5
+        guard = 3
+        p = 1.4
+
+        train_size = 2*(train + guard) + 1
+        guard_size = 2* guard +1
+        arr2 = np.pad(arr,train + guard,mode="mean")
+
+        # build kernel
+        kernel = np.zeros((7,7))
+        kernel = np.pad(kernel, 5, constant_values = 1)
+
+        # perform cfar operation
+        ave_noise = convolve(arr2, kernel, mode="same")[train+guard : train+guard+128, train+guard: train+guard+64] /(train_size**2 - guard_size**2)
+        
+        truth = np.greater_equal(arr, p* ave_noise)
+        output = np.where(truth, arr, 0)
+
+        return output
+
+
 
     def parse_complete_frame(self, frame_string): # takes a byte string containing the whole frame excluding magic word
         frame = frame_string[36:-20] # extract frame data
@@ -151,6 +178,7 @@ class Radar_Plot(QLabel):
         # send for svm
         else:
             self.ml_frames.append(data_arr)
+            self.frame_energies.append(np.sum(data_arr))
 
             # svm code here
             preprocessed = preprocess(self.ml_frames[0:5])
@@ -168,12 +196,20 @@ class Radar_Plot(QLabel):
 
         # plot
         #data_arr = data_arr - np.min(data_arr) #invert colors 
+        variable = 128  # originally 128
+        self.data = variable + data_arr
+        self.data = self.data.astype(np.uint8)
+        self.img = QImage(self.data, 64, 128, QImage.Format_Grayscale8)
+        self.setPixmap(QPixmap(self.img).scaled(640 ,640))
+        self.repaint()
+        """
         data_arr = (data_arr - np.min(data_arr))/(np.max(data_arr) - np.min(data_arr))
         data_arr = (255* data_arr).astype(np.uint8)
         self.data = data_arr
         self.img = QImage(self.data, 64, 128, QImage.Format_Grayscale8)
         self.setPixmap(QPixmap(self.img).scaled(640 ,640))
         self.repaint()
+        """
 
 
     @Slot(list)
@@ -307,7 +343,7 @@ class Main_Window(QWidget):
                 waiting = self.dataport.in_waiting
                 buffer.append(self.dataport.read(waiting))
                 byte_counter += waiting
-                time.sleep(0.05)
+                # time.sleep(0.05)
 
             buffer = b''.join(buffer)   # combines into a single byte string
             buffer = buffer.split(magic_word) # splits into packets based on magic word at start of header
