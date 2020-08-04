@@ -16,18 +16,27 @@ from serial.tools import list_ports
 # Pyside2 imports
 from PySide2.QtWidgets import QWidget, QPushButton, QComboBox, QGridLayout, QApplication, QLabel, QTextEdit
 from PySide2.QtGui import QPixmap, QImage, QFont, QColor
-from PySide2.QtCore import QRunnable, Signal, impSlot, QThreadPool
+from PySide2.QtCore import QRunnable, Signal, Slot, QThreadPool
 from PySide2.QtMultimedia import QCamera, QCameraInfo, QCameraViewfinderSettings
 from PySide2.QtMultimediaWidgets import QCameraViewfinder
 
 #Change all paths to your own when using this
 # SVM preprocessing and feature extractoin layers
+"""
 sys.path.append(r"D:\Documents\SUTD\Capstone\Fall_Detection\ml_final")
 from ml_final.preprocess_actualdata import preprocess  # * <- leik dis wan
 
 cfg_file = r"D:\Downloads\Telegram Desktop\profile_heat_map.cfg" 
 svm_weights = r"D:\Documents\SUTD\Capstone\Ml_Data\range_rangeDelta_doppDelta_94.pickle"
 output_folder = r"D:\Documents\SUTD\Capstone\Tests\Live"
+"""
+import os
+current_dir = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(os.path.join(current_dir, "ml_final"))
+from ml_final.preprocess_actualdata import preprocess  # * <- leik dis wan
+
+cfg_file = os.path.join(current_dir, "profile_heat_map.cfg")
+svm_weights = os.path.join(current_dir, "range_rangeDelta_doppDelta_94.pickle")
 
 class COM_Ports(QComboBox):
     def __init__(self):
@@ -247,8 +256,12 @@ class Main_Window(QWidget):
         self.plot.sig.connect(self.log_ml_output)      
 
     def start_callback(self):
+        """
         self.dataport = serial.Serial(port = self.data_port.currentText()[-5:-1], baudrate=921600)
         self.cfgport = serial.Serial(port= self.cfg_port.currentText()[-5:-1], baudrate=115200)
+        """
+        self.dataport = serial.Serial(port = "/dev/ttyACM1", baudrate=921600)
+        self.cfgport = serial.Serial(port= "/dev/ttyACM0", baudrate=115200)
 
         self.log.append("Data port:" + self.data_port.currentText()[-5:-1] + "baudrate: 921600")
         self.log.append("Cfg port:" + self.cfg_port.currentText()[-5:-1] + "baudrate: 115200")
