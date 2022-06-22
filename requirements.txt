@@ -5,7 +5,7 @@ iso8601==0.1.12
 joblib==0.14.1
 kiwisolver==1.1.0
 matplotlib==3.2.1
-numpy==1.19.0
+numpy==1.22.0
 pandas==1.0.3
 Pillow==7.0.0
 psutil==5.7.0
